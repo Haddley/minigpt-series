@@ -3,6 +3,7 @@ __pycache__/
 part2/data/
 */data/
 */runs/*.out
+*/runs/*.log
 *.pt
 *.safetensors
-teacher.safetensors
+*.npy

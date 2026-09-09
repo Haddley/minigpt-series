@@ -1,0 +1,7 @@
+__pycache__/
+.venv/
+part2/data/
+part3/runs/
+part3/runs_log.txt
+*.pt
+*.safetensors

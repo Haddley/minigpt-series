@@ -74,13 +74,25 @@ def main():
     n_params = sum(v.size for _, v in tree_flatten(student.parameters()))
     print(f"tag {args.tag}  alpha {args.alpha}  temp {args.temp}  student params {n_params:,}")
 
-    teacher = None
-    if args.teacher == "gpt2":
+    # --teacher: 'none' | 'gpt2' | 'gpt2-xl' | a Hugging Face id with a '/' (mlx-lm)
+    #          | 'torch:<hf id>' for an arch mlx-lm lacks (e.g. GPT-Neo / TinyStories)
+    #          | path to a local MiniGPT .safetensors
+    HF_ALIASES = {"gpt2": "openai-community/gpt2", "gpt2-xl": "openai-community/gpt2-xl"}
+    teacher, torch_teacher = None, None
+    if args.teacher.startswith("torch:"):
+        import torch
+        from transformers import AutoModelForCausalLM
+        torch_dev = "mps" if torch.backends.mps.is_available() else "cpu"
+        torch_teacher = AutoModelForCausalLM.from_pretrained(
+            args.teacher[6:], dtype=torch.float32).to(torch_dev).eval()
+        print(f"teacher {args.teacher[6:]} loaded (torch, {torch_dev}) and frozen")
+    elif args.teacher != "none" and not args.teacher.endswith(".safetensors"):
         from mlx_lm import load
-        teacher, _ = load(TEACHER_ID)
+        model_id = HF_ALIASES.get(args.teacher, args.teacher)
+        teacher, _ = load(model_id)
         teacher.freeze()
         mx.eval(teacher.parameters())
-        print(f"teacher {TEACHER_ID} loaded and frozen")
+        print(f"teacher {model_id} loaded (mlx-lm) and frozen")
     elif args.teacher != "none":
         cfg = json.load(open(os.path.join(os.path.dirname(args.teacher), "teacher_config.json")))
         teacher = MiniGPT(tok.vocab_size, n_layer=cfg["layers"], n_head=cfg["heads"],
@@ -91,14 +103,23 @@ def main():
         mx.eval(teacher.parameters())
         print(f"teacher {args.teacher} ({cfg['params']:,} params) loaded and frozen")
 
-    def loss_fn(model, x, y):
+    distilling = teacher is not None or torch_teacher is not None
+
+    def teacher_logits(x_np):
+        if torch_teacher is not None:
+            import torch
+            with torch.no_grad():
+                tl = torch_teacher(torch.tensor(x_np, device=torch_teacher.device)).logits
+            return mx.array(tl.float().cpu().numpy())
+        return mx.stop_gradient(teacher(mx.array(x_np)))
+
+    def loss_fn(model, x, y, t_logits):
         s = model(x)
         V = s.shape[-1]
         ce = nn.losses.cross_entropy(s.reshape(-1, V), y.reshape(-1), reduction="mean")
-        if teacher is None:
+        if t_logits is None:
             return ce
-        t = mx.stop_gradient(teacher(x))
-        t_logp = nn.log_softmax(t / args.temp, axis=-1)
+        t_logp = nn.log_softmax(t_logits / args.temp, axis=-1)
         s_logp = nn.log_softmax(s / args.temp, axis=-1)
         kl = (mx.exp(t_logp) * (t_logp - s_logp)).sum(-1).mean()
         return args.alpha * ce + (1 - args.alpha) * (args.temp ** 2) * kl
@@ -131,7 +152,8 @@ def main():
                 mx.save_safetensors(os.path.join(OUT, f"ckpt_{args.tag}.safetensors"),
                                     dict(tree_flatten(student.parameters())))
         xb, yb = batch(train_ids, args.block_size, args.batch_size, rng)
-        loss, grads = loss_and_grad(student, mx.array(xb), mx.array(yb))
+        tl = teacher_logits(xb) if distilling else None
+        loss, grads = loss_and_grad(student, mx.array(xb), mx.array(yb), tl)
         grads, _ = optim.clip_grad_norm(grads, 1.0)
         opt.update(student, grads)
         mx.eval(student.state, opt.state)

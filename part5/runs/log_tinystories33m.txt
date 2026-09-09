@@ -1,0 +1,24 @@
+tag tinystories33m  alpha 0.5  temp 2.0  student params 30,035,328
+Warning: You are sending unauthenticated requests to the HF Hub. Please set a HF_TOKEN to enable higher rate limits and faster downloads.
+Loading weights:   0%|          | 0/56 [00:00<?, ?it/s]Loading weights: 100%|██████████| 56/56 [00:00<00:00, 32144.66it/s]
+[transformers] [1mGPTNeoForCausalLM LOAD REPORT[0m from: roneneldan/TinyStories-33M
+Key                                                   | Status     |  | 
+------------------------------------------------------+------------+--+-
+transformer.h.{0, 1, 2, 3}.attn.attention.bias        | UNEXPECTED |  | 
+transformer.h.{0, 1, 2, 3}.attn.attention.masked_bias | UNEXPECTED |  | 
+
+Notes:
+- UNEXPECTED:	can be ignored when loading from different task/architecture; not ok if you expect identical arch.
+teacher roneneldan/TinyStories-33M loaded (torch, mps) and frozen
+step     0  train 11.2836  val 11.2850  val bpb 4.0028
+step   300  train 3.5611  val 3.5739  val bpb 1.2677
+step   600  train 2.9481  val 3.0150  val bpb 1.0694
+step   900  train 2.5954  val 2.6873  val bpb 0.9532
+step  1200  train 2.4159  val 2.4523  val bpb 0.8698
+step  1500  train 2.2430  val 2.3393  val bpb 0.8298
+step  1800  train 2.1281  val 2.2030  val bpb 0.7814
+step  2100  train 2.0747  val 2.1579  val bpb 0.7654
+step  2400  train 1.9969  val 2.0607  val bpb 0.7310
+step  2700  train 1.9770  val 2.0422  val bpb 0.7244
+step  3000  train 1.9409  val 2.0310  val bpb 0.7204
+done in 23.50 min  best val 2.0310  peak 11.43 GB

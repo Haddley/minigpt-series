@@ -1,10 +1,17 @@
 # minigpt-series
 
-Companion code for the MiniGPT blog series.
+Companion code for the MiniGPT blog series — building a small language model from
+a character-level GPT up to a modern MLX model, one change at a time, on a 2022
+Mac Studio (M1 Max, 64 GB).
 
-- **Part 1** — Jibin Joseph's [MiniGPT notebook](https://github.com/jibin10/MiniGPT), run locally on Apple Silicon. Character-level, PyTorch + MPS.
-- **`part2/`** — the same GPT, three tokenizers (character, GPT-2 byte-level BPE, a custom 8k BPE), trained on a slice of TinyStories. PyTorch + MPS. Compared on bits-per-byte.
-- **`part3/`** — the Part 2 model ported to Apple's MLX. Same tokenizer, same data. Head-to-head speed and memory against the PyTorch + MPS run.
+| Part | What changes | Framework |
+|---|---|---|
+| 1 | Jibin Joseph's [MiniGPT notebook](https://github.com/jibin10/MiniGPT) — character-level GPT from first principles | PyTorch + MPS |
+| `part2/` | character vs GPT-2 vs a trained 8k BPE tokenizer, on TinyStories, scored in bits per byte | PyTorch + MPS |
+| `part3/` | the same model rebuilt in Apple's MLX; benchmarked against PyTorch-MPS | MLX |
+| `part4/` | the Llama 3.2 block — RMSNorm, RoPE, SwiGLU, GQA — each ablated | MLX |
+| `part5/` | logit distillation from GPT-2 small and from a same-data 51M teacher | MLX |
+| `part6/` | chunked sliding-window attention; a memory sweep vs full attention | MLX |
 
 ## Setup
 
@@ -14,34 +21,49 @@ source .venv/bin/activate
 pip install -r requirements.txt
 ```
 
-## Part 2
+Parts 3–6 need Apple Silicon (MLX). Parts 2–3 also run on CUDA or CPU.
+
+## Running
 
 ```bash
+# Part 2
 cd part2
-python prepare_data.py            # download a slice of TinyStories, split 90/10
-python tokenizers_setup.py        # build the char / gpt2 / bpe8k tokenizers
-python train.py --tokenizer char
-python train.py --tokenizer gpt2
-python train.py --tokenizer bpe8k
-python compare.py                 # bits-per-byte curves + summary table
-python generate.py --tokenizer bpe8k --prompt "Once upon a time"
-```
+python prepare_data.py && python tokenizers_setup.py
+python train.py --tokenizer char    # then gpt2, then bpe8k
+python compare.py
 
-## Part 3
-
-```bash
-cd part3
+# Part 3
+cd ../part3
 python train_mlx.py --tokenizer bpe8k
-python bench.py --framework torch          # PyTorch-MPS: tokens/sec, peak memory
-python bench.py --framework mlx            # MLX with mx.compile
-python bench.py --framework mlx-nocompile  # MLX without mx.compile
-python figures.py                         # loss-curve and benchmark plots
-python generate_mlx.py --prompt "Once upon a time"
+python bench.py --framework torch    # then mlx, mlx-nocompile
+
+# Part 4
+cd ../part4
+python train_llama.py --tag modern   # --mlp gelu / --gqa-off / --norm layer / --pos learned
+python figures.py
+
+# Part 5
+cd ../part5
+python train_distill.py --tag baseline --teacher none --alpha 1.0
+python train_distill.py --tag gpt2 --teacher gpt2 --alpha 0.5
+python train_teacher.py --dim 512 --layers 8 --iters 5000
+python train_distill.py --tag big --teacher runs/teacher.safetensors --alpha 0.5
+
+# Part 6
+cd ../part6
+python mem_sweep.py && python figures.py
 ```
 
-Results on a 2022 Mac Studio (M1 Max, 64 GB), 3,000 iterations, 8k BPE tokenizer:
+## Key results (M1 Max, 64 GB)
 
-| | val bits/byte | training step | peak memory |
-|---|---|---|---|
-| PyTorch + MPS | 0.697 | 48,400 tok/s | 4.60 GB |
-| MLX (`mx.compile`) | 0.689 | 56,100 tok/s | 3.89 GB |
+| | val bits/byte | note |
+|---|---|---|
+| Part 2 — character tokenizer | 1.04 | lowest raw loss, worst bits/byte |
+| Part 2 — trained 8k BPE | 0.70 | matches GPT-2's 50k vocab at <½ the params |
+| Part 3 — MLX vs PyTorch-MPS | — | `mx.compile` 16% faster, 15% less memory |
+| Part 4 — modern Llama block | 0.672 | vs 0.689 GPT block; the gain is entirely RoPE |
+| Part 5 — distilled from a same-data teacher | 0.694 | vs 0.756 baseline; GPT-2 as teacher: no help |
+| Part 6 — 256-token sliding window @ 1024 ctx | 0.673 | = full attention, at lower memory |
+
+`tools/render_term.py` renders captured stdout as terminal-style PNGs for the posts
+(the runs are headless, so there is no window to screenshot).

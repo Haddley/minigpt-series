@@ -32,5 +32,16 @@ python generate.py --tokenizer bpe8k --prompt "Once upon a time"
 ```bash
 cd part3
 python train_mlx.py --tokenizer bpe8k
-python bench.py                   # PyTorch-MPS vs MLX: tokens/sec, peak memory
+python bench.py --framework torch          # PyTorch-MPS: tokens/sec, peak memory
+python bench.py --framework mlx            # MLX with mx.compile
+python bench.py --framework mlx-nocompile  # MLX without mx.compile
+python figures.py                         # loss-curve and benchmark plots
+python generate_mlx.py --prompt "Once upon a time"
 ```
+
+Results on a 2022 Mac Studio (M1 Max, 64 GB), 3,000 iterations, 8k BPE tokenizer:
+
+| | val bits/byte | training step | peak memory |
+|---|---|---|---|
+| PyTorch + MPS | 0.697 | 48,400 tok/s | 4.60 GB |
+| MLX (`mx.compile`) | 0.689 | 56,100 tok/s | 3.89 GB |

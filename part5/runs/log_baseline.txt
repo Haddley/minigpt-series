@@ -1,0 +1,13 @@
+tag baseline  alpha 1.0  temp 2.0  student params 30,035,328
+step     0  train 11.2836  val 11.2850  val bpb 4.0028
+step   300  train 3.4931  val 3.5105  val bpb 1.2452
+step   600  train 2.9321  val 3.0103  val bpb 1.0678
+step   900  train 2.6585  val 2.7558  val bpb 0.9775
+step  1200  train 2.4816  val 2.5391  val bpb 0.9006
+step  1500  train 2.3194  val 2.4341  val bpb 0.8634
+step  1800  train 2.2224  val 2.3192  val bpb 0.8226
+step  2100  train 2.1526  val 2.2654  val bpb 0.8035
+step  2400  train 2.0799  val 2.1595  val bpb 0.7660
+step  2700  train 2.0559  val 2.1492  val bpb 0.7623
+step  3000  train 2.0090  val 2.1299  val bpb 0.7555
+done in 12.82 min  best val 2.1299  peak 5.42 GB

@@ -1,0 +1,9 @@
+full      T=512    peak    2.55 GB       97.7 ms/step
+naive     T=512    peak    2.60 GB       95.6 ms/step
+chunked   T=512    peak    2.67 GB      103.3 ms/step
+full      T=1024   peak    4.65 GB      216.2 ms/step
+naive     T=1024   peak    4.64 GB      218.4 ms/step
+chunked   T=1024   peak    4.36 GB      200.6 ms/step
+full      T=2048   peak   11.54 GB      583.9 ms/step
+naive     T=2048   peak   11.52 GB      554.6 ms/step
+chunked   T=2048   peak    7.69 GB      393.6 ms/step

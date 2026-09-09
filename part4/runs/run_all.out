@@ -1,0 +1,66 @@
+tag modern  norm rms  pos rope  mlp swiglu  kv_heads 2  params 12,587,904
+step     0  train 9.5006  val 9.5095  val bpb 3.3420
+step   300  train 2.7455  val 2.8170  val bpb 0.9900
+step   600  train 2.3670  val 2.4277  val bpb 0.8532
+step   900  train 2.1283  val 2.2600  val bpb 0.7943
+step  1200  train 2.0025  val 2.1244  val bpb 0.7466
+step  1500  train 1.9027  val 2.0651  val bpb 0.7258
+step  1800  train 1.8202  val 2.0249  val bpb 0.7116
+step  2100  train 1.7619  val 1.9480  val bpb 0.6846
+step  2400  train 1.7330  val 1.9121  val bpb 0.6720
+step  2700  train 1.6895  val 1.9152  val bpb 0.6731
+step  3000  train 1.6600  val 1.9112  val bpb 0.6717
+done in 7.49 min  best val 1.9112  peak 3.64 GB
+tag rms_rope_gelu  norm rms  pos rope  mlp gelu  kv_heads 2  params 12,599,424
+step     0  train 9.5604  val 9.5684  val bpb 3.3627
+step   300  train 2.7866  val 2.8545  val bpb 1.0032
+step   600  train 2.4117  val 2.4679  val bpb 0.8673
+step   900  train 2.1648  val 2.2910  val bpb 0.8052
+step  1200  train 2.0408  val 2.1582  val bpb 0.7585
+step  1500  train 1.9290  val 2.0861  val bpb 0.7332
+step  1800  train 1.8466  val 2.0451  val bpb 0.7187
+step  2100  train 1.7891  val 1.9672  val bpb 0.6914
+step  2400  train 1.7613  val 1.9338  val bpb 0.6796
+step  2700  train 1.7117  val 1.9276  val bpb 0.6774
+step  3000  train 1.6827  val 1.9225  val bpb 0.6756
+done in 7.57 min  best val 1.9225  peak 3.83 GB
+tag rms_rope_mha  norm rms  pos rope  mlp swiglu  kv_heads 6  params 13,767,552
+step     0  train 9.4772  val 9.4882  val bpb 3.3345
+step   300  train 2.7620  val 2.8296  val bpb 0.9944
+step   600  train 2.3765  val 2.4384  val bpb 0.8570
+step   900  train 2.1369  val 2.2672  val bpb 0.7968
+step  1200  train 2.0194  val 2.1443  val bpb 0.7536
+step  1500  train 1.9104  val 2.0752  val bpb 0.7293
+step  1800  train 1.8259  val 2.0329  val bpb 0.7144
+step  2100  train 1.7662  val 1.9561  val bpb 0.6875
+step  2400  train 1.7363  val 1.9179  val bpb 0.6740
+step  2700  train 1.6913  val 1.9208  val bpb 0.6751
+step  3000  train 1.6581  val 1.9125  val bpb 0.6721
+done in 7.80 min  best val 1.9125  peak 3.76 GB
+tag layer_rope  norm layer  pos rope  mlp swiglu  kv_heads 2  params 12,592,896
+step     0  train 9.4932  val 9.5020  val bpb 3.3394
+step   300  train 2.7415  val 2.8103  val bpb 0.9877
+step   600  train 2.3606  val 2.4233  val bpb 0.8516
+step   900  train 2.1179  val 2.2513  val bpb 0.7912
+step  1200  train 1.9953  val 2.1164  val bpb 0.7438
+step  1500  train 1.8946  val 2.0579  val bpb 0.7232
+step  1800  train 1.8106  val 2.0169  val bpb 0.7088
+step  2100  train 1.7515  val 1.9413  val bpb 0.6823
+step  2400  train 1.7239  val 1.9070  val bpb 0.6702
+step  2700  train 1.6793  val 1.9077  val bpb 0.6704
+step  3000  train 1.6513  val 1.9016  val bpb 0.6683
+done in 7.41 min  best val 1.9016  peak 3.63 GB
+tag rms_learned  norm rms  pos learned  mlp swiglu  kv_heads 6  params 13,865,856
+step     0  train 9.5172  val 9.5253  val bpb 3.3476
+step   300  train 3.1518  val 3.2055  val bpb 1.1265
+step   600  train 2.5967  val 2.6402  val bpb 0.9279
+step   900  train 2.3094  val 2.4222  val bpb 0.8512
+step  1200  train 2.1550  val 2.2548  val bpb 0.7924
+step  1500  train 2.0370  val 2.1750  val bpb 0.7644
+step  1800  train 1.9432  val 2.1171  val bpb 0.7440
+step  2100  train 1.8747  val 2.0298  val bpb 0.7134
+step  2400  train 1.8469  val 1.9894  val bpb 0.6992
+step  2700  train 1.7947  val 1.9874  val bpb 0.6984
+step  3000  train 1.7659  val 1.9762  val bpb 0.6945
+done in 7.57 min  best val 1.9762  peak 3.76 GB
+ALL DONE

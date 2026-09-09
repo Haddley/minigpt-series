@@ -1,0 +1,15 @@
+tag gpt2  alpha 0.5  temp 2.0  student params 30,035,328
+Fetching 14 files:   0%|          | 0/14 [00:00<?, ?it/s]Fetching 14 files: 100%|██████████| 14/14 [00:00<00:00, 2539.47it/s]
+teacher openai-community/gpt2 loaded and frozen
+step     0  train 11.2836  val 11.2850  val bpb 4.0028
+step   300  train 3.5483  val 3.5620  val bpb 1.2635
+step   600  train 2.9259  val 2.9899  val bpb 1.0605
+step   900  train 2.6449  val 2.7223  val bpb 0.9656
+step  1200  train 2.4625  val 2.4973  val bpb 0.8858
+step  1500  train 2.3069  val 2.3912  val bpb 0.8482
+step  1800  train 2.2190  val 2.2846  val bpb 0.8103
+step  2100  train 2.1525  val 2.2311  val bpb 0.7914
+step  2400  train 2.0914  val 2.1418  val bpb 0.7597
+step  2700  train 2.0683  val 2.1285  val bpb 0.7550
+step  3000  train 2.0289  val 2.1058  val bpb 0.7469
+done in 25.11 min  best val 2.1058  peak 11.11 GB

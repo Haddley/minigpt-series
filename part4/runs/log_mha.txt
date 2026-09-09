@@ -1,0 +1,13 @@
+tag rms_rope_mha  norm rms  pos rope  mlp swiglu  kv_heads 6  params 13,767,552
+step     0  train 9.4772  val 9.4882  val bpb 3.3345
+step   300  train 2.7620  val 2.8296  val bpb 0.9944
+step   600  train 2.3765  val 2.4384  val bpb 0.8570
+step   900  train 2.1369  val 2.2672  val bpb 0.7968
+step  1200  train 2.0194  val 2.1443  val bpb 0.7536
+step  1500  train 1.9104  val 2.0752  val bpb 0.7293
+step  1800  train 1.8259  val 2.0329  val bpb 0.7144
+step  2100  train 1.7662  val 1.9561  val bpb 0.6875
+step  2400  train 1.7363  val 1.9179  val bpb 0.6740
+step  2700  train 1.6913  val 1.9208  val bpb 0.6751
+step  3000  train 1.6581  val 1.9125  val bpb 0.6721
+done in 7.80 min  best val 1.9125  peak 3.76 GB

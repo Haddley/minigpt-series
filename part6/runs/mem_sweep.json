@@ -1,0 +1,56 @@
+[
+  {
+    "mode": "full",
+    "T": 512,
+    "peak_gb": 2.552,
+    "ms_step": 97.7
+  },
+  {
+    "mode": "naive",
+    "T": 512,
+    "peak_gb": 2.604,
+    "ms_step": 95.6
+  },
+  {
+    "mode": "chunked",
+    "T": 512,
+    "peak_gb": 2.671,
+    "ms_step": 103.3
+  },
+  {
+    "mode": "full",
+    "T": 1024,
+    "peak_gb": 4.645,
+    "ms_step": 216.2
+  },
+  {
+    "mode": "naive",
+    "T": 1024,
+    "peak_gb": 4.639,
+    "ms_step": 218.4
+  },
+  {
+    "mode": "chunked",
+    "T": 1024,
+    "peak_gb": 4.364,
+    "ms_step": 200.6
+  },
+  {
+    "mode": "full",
+    "T": 2048,
+    "peak_gb": 11.543,
+    "ms_step": 583.9
+  },
+  {
+    "mode": "naive",
+    "T": 2048,
+    "peak_gb": 11.518,
+    "ms_step": 554.6
+  },
+  {
+    "mode": "chunked",
+    "T": 2048,
+    "peak_gb": 7.691,
+    "ms_step": 393.6
+  }
+]

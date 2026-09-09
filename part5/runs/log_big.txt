@@ -1,0 +1,14 @@
+tag big  alpha 0.5  temp 2.0  student params 30,035,328
+teacher runs/teacher.safetensors (51,066,368 params) loaded and frozen
+step     0  train 11.2836  val 11.2850  val bpb 4.0028
+step   300  train 3.3879  val 3.4204  val bpb 1.2132
+step   600  train 2.7360  val 2.8277  val bpb 1.0030
+step   900  train 2.4274  val 2.5509  val bpb 0.9048
+step  1200  train 2.2216  val 2.3073  val bpb 0.8184
+step  1500  train 2.0557  val 2.2041  val bpb 0.7818
+step  1800  train 1.9822  val 2.1076  val bpb 0.7476
+step  2100  train 1.9202  val 2.0631  val bpb 0.7318
+step  2400  train 1.8654  val 1.9789  val bpb 0.7019
+step  2700  train 1.8529  val 1.9714  val bpb 0.6993
+step  3000  train 1.8120  val 1.9553  val bpb 0.6936
+done in 20.09 min  best val 1.9553  peak 10.81 GB

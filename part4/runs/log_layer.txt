@@ -1,0 +1,13 @@
+tag layer_rope  norm layer  pos rope  mlp swiglu  kv_heads 2  params 12,592,896
+step     0  train 9.4932  val 9.5020  val bpb 3.3394
+step   300  train 2.7415  val 2.8103  val bpb 0.9877
+step   600  train 2.3606  val 2.4233  val bpb 0.8516
+step   900  train 2.1179  val 2.2513  val bpb 0.7912
+step  1200  train 1.9953  val 2.1164  val bpb 0.7438
+step  1500  train 1.8946  val 2.0579  val bpb 0.7232
+step  1800  train 1.8106  val 2.0169  val bpb 0.7088
+step  2100  train 1.7515  val 1.9413  val bpb 0.6823
+step  2400  train 1.7239  val 1.9070  val bpb 0.6702
+step  2700  train 1.6793  val 1.9077  val bpb 0.6704
+step  3000  train 1.6513  val 1.9016  val bpb 0.6683
+done in 7.41 min  best val 1.9016  peak 3.63 GB

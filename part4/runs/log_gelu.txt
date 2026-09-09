@@ -1,0 +1,13 @@
+tag rms_rope_gelu  norm rms  pos rope  mlp gelu  kv_heads 2  params 12,599,424
+step     0  train 9.5604  val 9.5684  val bpb 3.3627
+step   300  train 2.7866  val 2.8545  val bpb 1.0032
+step   600  train 2.4117  val 2.4679  val bpb 0.8673
+step   900  train 2.1648  val 2.2910  val bpb 0.8052
+step  1200  train 2.0408  val 2.1582  val bpb 0.7585
+step  1500  train 1.9290  val 2.0861  val bpb 0.7332
+step  1800  train 1.8466  val 2.0451  val bpb 0.7187
+step  2100  train 1.7891  val 1.9672  val bpb 0.6914
+step  2400  train 1.7613  val 1.9338  val bpb 0.6796
+step  2700  train 1.7117  val 1.9276  val bpb 0.6774
+step  3000  train 1.6827  val 1.9225  val bpb 0.6756
+done in 7.57 min  best val 1.9225  peak 3.83 GB

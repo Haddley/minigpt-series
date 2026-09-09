@@ -1,0 +1,15 @@
+tag distill  alpha 0.3  temp 2.0  student params 30,035,328
+Fetching 14 files:   0%|          | 0/14 [00:00<?, ?it/s]Fetching 14 files: 100%|██████████| 14/14 [00:00<00:00, 2728.00it/s]
+teacher openai-community/gpt2 loaded and frozen
+step     0  train 11.2836  val 11.2850  val bpb 4.0028
+step   300  train 3.6572  val 3.6717  val bpb 1.3024
+step   600  train 3.0396  val 3.0947  val bpb 1.0977
+step   900  train 2.7471  val 2.8119  val bpb 0.9974
+step  1200  train 2.5498  val 2.5795  val bpb 0.9150
+step  1500  train 2.4116  val 2.4808  val bpb 0.8800
+step  1800  train 2.3330  val 2.3822  val bpb 0.8450
+step  2100  train 2.2611  val 2.3239  val bpb 0.8243
+step  2400  train 2.2061  val 2.2395  val bpb 0.7944
+step  2700  train 2.1843  val 2.2288  val bpb 0.7906
+step  3000  train 2.1469  val 2.2059  val bpb 0.7825
+done in 25.73 min  best val 2.2059  peak 11.11 GB

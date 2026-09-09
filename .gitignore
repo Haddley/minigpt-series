@@ -1,7 +1,8 @@
 __pycache__/
 .venv/
 part2/data/
-part3/runs/
-part3/runs_log.txt
+*/data/
+*/runs/*.out
 *.pt
 *.safetensors
+teacher.safetensors

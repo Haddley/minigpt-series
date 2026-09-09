@@ -1,0 +1,9 @@
+tag window1024  norm rms  pos rope  mlp swiglu  kv_heads 2  params 12,587,904
+step     0  train 9.4697  val 9.4714  val bpb 3.3286
+step   250  train 2.6165  val 2.7056  val bpb 0.9509
+step   500  train 2.1797  val 2.3003  val bpb 0.8084
+step   750  train 1.9594  val 2.1039  val bpb 0.7394
+step  1000  train 1.8065  val 1.9974  val bpb 0.7020
+step  1250  train 1.7503  val 1.9400  val bpb 0.6818
+step  1500  train 1.7210  val 1.9143  val bpb 0.6727
+done in 9.03 min  best val 1.9143  peak 7.66 GB

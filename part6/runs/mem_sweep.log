@@ -7,3 +7,14 @@ chunked   T=1024   peak    4.36 GB      200.6 ms/step
 full      T=2048   peak   11.54 GB      583.9 ms/step
 naive     T=2048   peak   11.52 GB      554.6 ms/step
 chunked   T=2048   peak    7.69 GB      393.6 ms/step
+full      T=4096   peak   35.54 GB     1910.2 ms/step
+naive     T=4096   peak   35.44 GB     1798.5 ms/step
+chunked   T=4096   peak   15.10 GB      826.6 ms/step
+full      T=8192   skipped (O(T^2), past FULL_MAX)
+naive     T=8192   skipped (O(T^2), past FULL_MAX)
+chunked   T=8192   peak   30.04 GB     1871.4 ms/step
+full      T=16384  skipped (O(T^2), past FULL_MAX)
+naive     T=16384  skipped (O(T^2), past FULL_MAX)
+chunked   T=16384  peak   59.39 GB     5309.2 ms/step
+
+wrote /Users/neilhaddley/Documents/GitHub/minigpt-series/part6/runs/mem_sweep.json

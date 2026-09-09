@@ -1,0 +1,14 @@
+tokenizer bpe8k  vocab 8,192  train tokens 4,928,114  tokens/byte 0.2436
+parameters 13,882,368
+step     0  train 9.5896  val 9.5847  val bpb 3.3685
+step   300  train 3.1420  val 3.1922  val bpb 1.1218
+step   600  train 2.5907  val 2.6721  val bpb 0.9391
+step   900  train 2.3439  val 2.4340  val bpb 0.8554
+step  1200  train 2.1571  val 2.2990  val bpb 0.8080
+step  1500  train 2.0407  val 2.1805  val bpb 0.7663
+step  1800  train 1.9492  val 2.1040  val bpb 0.7394
+step  2100  train 1.9143  val 2.0580  val bpb 0.7232
+step  2400  train 1.8421  val 2.0177  val bpb 0.7091
+step  2700  train 1.8091  val 1.9876  val bpb 0.6985
+step  3000  train 1.7665  val 1.9591  val bpb 0.6885
+done in 8.06 min  best val 1.9591  50,841 tok/s  peak 4.35 GB

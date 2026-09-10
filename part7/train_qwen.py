@@ -29,8 +29,10 @@ from qwen_data import load_split  # noqa: E402
 OUT = os.path.join(os.path.dirname(__file__), "runs")
 CACHE = os.path.join(os.path.dirname(__file__), "data")
 BLOCK = 256
-STUDENTS = {"tiny": dict(n_embd=384, n_layer=6, n_head=6),
-            "scaled": dict(n_embd=512, n_layer=8, n_head=8)}
+STUDENTS = {"tiny":   dict(n_embd=384,  n_layer=6,  n_head=6),
+            "scaled": dict(n_embd=512,  n_layer=8,  n_head=8),
+            "large":  dict(n_embd=1024, n_layer=16, n_head=16),
+            "xl":     dict(n_embd=1280, n_layer=20, n_head=16)}
 TEACHERS = {"qwen8b": "mlx-community/Qwen3-8B-Base-bf16"}
 
 
@@ -60,6 +62,7 @@ def main():
     p.add_argument("--batch-size", type=int, default=16)
     p.add_argument("--train-chunks", type=int, default=10**9,
                    help="cap training chunks (default: the whole stream)")
+    p.add_argument("--no-ckpt", action="store_true", help="skip checkpoint saving (memory)")
     p.add_argument("--seed", type=int, default=1337)
     args = p.parse_args()
 
@@ -124,30 +127,41 @@ def main():
         ce = tot / n
         return ce, ce / math.log(2) * tpb
 
+    hpath = os.path.join(OUT, f"history_{args.tag}.json")
+
+    def dump(history, elapsed, crashed=False):
+        with open(hpath, "w") as f:
+            json.dump({"history": history, "elapsed_sec": elapsed, "peak_gb": peak_gb(),
+                       "tokens_per_byte": tpb, "params": n_params, "emb_frac": n_emb / n_params,
+                       "student": args.student, "teacher": args.teacher, "crashed": crashed}, f, indent=2)
+
     history, best = [], float("inf")
     t0 = time.time()
-    for step in range(args.iters + 1):
-        opt.learning_rate = lr_at(step, 100, args.iters, 1e-4, 1e-3)
-        if step % args.eval_interval == 0:
-            ce, bpb = val_bpb()
-            history.append({"step": step, "val": ce, "bpb": bpb})
-            print(f"step {step:5d}  val {ce:.4f}  val bpb {bpb:.4f}", flush=True)
-            if ce < best:
-                best = ce
-                mx.save_safetensors(os.path.join(OUT, f"ckpt_{args.tag}.safetensors"),
-                                    dict(tree_flatten(student.parameters())))
-        x, y, ti, tv = get_chunks(train_ids, n_train, args.teacher != "none")
-        loss, grads = loss_and_grad(student, x, y, ti, tv)
-        grads, _ = optim.clip_grad_norm(grads, 1.0)
-        opt.update(student, grads)
-        mx.eval(student.state, opt.state)
+    try:
+        for step in range(args.iters + 1):
+            opt.learning_rate = lr_at(step, 100, args.iters, 1e-4, 1e-3)
+            if step % args.eval_interval == 0:
+                ce, bpb = val_bpb()
+                history.append({"step": step, "val": ce, "bpb": bpb})
+                print(f"step {step:5d}  val {ce:.4f}  val bpb {bpb:.4f}", flush=True)
+                dump(history, time.time() - t0)                 # incremental — survive a crash
+                if ce < best and not args.no_ckpt:
+                    best = ce
+                    mx.save_safetensors(os.path.join(OUT, f"ckpt_{args.tag}.safetensors"),
+                                        dict(tree_flatten(student.parameters())))
+            x, y, ti, tv = get_chunks(train_ids, n_train, args.teacher != "none")
+            loss, grads = loss_and_grad(student, x, y, ti, tv)
+            grads, _ = optim.clip_grad_norm(grads, 1.0)
+            opt.update(student, grads)
+            mx.eval(student.state, opt.state)
+    except RuntimeError as e:
+        print(f"CRASHED at step {step}: {e}", flush=True)
+        dump(history, time.time() - t0, crashed=True)
+        raise
 
-    elapsed = time.time() - t0
-    print(f"done in {elapsed/60:.1f} min  best val {best:.4f}  peak {peak_gb():.2f} GB")
-    with open(os.path.join(OUT, f"history_{args.tag}.json"), "w") as f:
-        json.dump({"history": history, "elapsed_sec": elapsed, "peak_gb": peak_gb(),
-                   "tokens_per_byte": tpb, "params": n_params, "emb_frac": n_emb / n_params,
-                   "student": args.student, "teacher": args.teacher}, f, indent=2)
+    best = min((p["val"] for p in history), default=float("inf"))
+    print(f"done in {(time.time()-t0)/60:.1f} min  best val {best:.4f}  peak {peak_gb():.2f} GB")
+    dump(history, time.time() - t0)
 
 
 if __name__ == "__main__":

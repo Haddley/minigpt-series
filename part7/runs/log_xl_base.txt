@@ -1,0 +1,14 @@
+training on the first 18,932 chunks (4,846,592 tokens)
+student xl: 588,254,720 params (194,478,080 = 33% embedding)  vocab 151,936
+step     0  val 12.3349  val bpb 4.2577
+step   300  val 4.2733  val bpb 1.4750
+step   600  val 4.1522  val bpb 1.4332
+step   900  val 4.2051  val bpb 1.4515
+step  1200  val 4.1265  val bpb 1.4244
+step  1500  val 4.1145  val bpb 1.4202
+step  1800  val 4.0811  val bpb 1.4087
+step  2100  val 4.0052  val bpb 1.3825
+step  2400  val 3.9241  val bpb 1.3545
+step  2700  val 3.8584  val bpb 1.3318
+step  3000  val 3.8838  val bpb 1.3406
+done in 83.6 min  best val 3.8584  peak 18.82 GB

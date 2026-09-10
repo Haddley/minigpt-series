@@ -1,0 +1,15 @@
+training on the first 18,932 chunks (4,846,592 tokens)
+student large: 357,320,704 params (155,582,464 = 44% embedding)  vocab 151,936
+teacher cache qwen8b: (4846592, 48), k=48  -> 18,932 chunks
+step     0  val 12.3243  val bpb 4.2540
+step   300  val 4.1827  val bpb 1.4438
+step   600  val 3.9777  val bpb 1.3730
+step   900  val 3.9467  val bpb 1.3623
+step  1200  val 3.9282  val bpb 1.3559
+step  1500  val 3.8352  val bpb 1.3238
+step  1800  val 3.7692  val bpb 1.3010
+step  2100  val 3.7516  val bpb 1.2950
+step  2400  val 3.6662  val bpb 1.2655
+step  2700  val 3.5911  val bpb 1.2395
+step  3000  val 3.5745  val bpb 1.2338
+done in 77.5 min  best val 3.5745  peak 20.01 GB

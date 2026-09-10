@@ -12,6 +12,7 @@ Mac Studio (M1 Max, 64 GB).
 | `part4/` | the Llama 3.2 block — RMSNorm, RoPE, SwiGLU, GQA — each ablated | MLX |
 | `part5/` | logit distillation from GPT-2 small and from a same-data 51M teacher | MLX |
 | `part6/` | chunked sliding-window attention; a memory sweep vs full attention | MLX |
+| `part7/` | rebuild on Qwen3's 152k vocabulary; distil from Qwen3-8B-Base via cached logits | MLX |
 
 ## Setup
 
@@ -64,6 +65,7 @@ python mem_sweep.py && python figures.py
 | Part 4 — modern Llama block | 0.672 | vs 0.689 GPT block; the gain is entirely RoPE |
 | Part 5 — distilled from a same-data teacher | 0.694 | vs 0.756 baseline; GPT-2 as teacher: no help |
 | Part 6 — 256-token sliding window @ 1024 ctx | 0.673 | = full attention, at lower memory |
+| Part 7 — scaled student, Qwen3-8B-Base teacher | 0.731 | vs 0.765 baseline; frontier teacher, small gain |
 
 `tools/render_term.py` renders captured stdout as terminal-style PNGs for the posts
 (the runs are headless, so there is no window to screenshot).

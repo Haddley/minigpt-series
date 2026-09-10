@@ -1,0 +1,14 @@
+training on the first 18,932 chunks (4,846,592 tokens)
+student tiny: 69,080,064 params (58,343,424 = 84% embedding)  vocab 151,936
+step     0  val 12.4495  val bpb 4.2972
+step   300  val 3.6016  val bpb 1.2432
+step   600  val 3.1026  val bpb 1.0709
+step   900  val 2.8177  val bpb 0.9726
+step  1200  val 2.6309  val bpb 0.9081
+step  1500  val 2.4979  val bpb 0.8622
+step  1800  val 2.4083  val bpb 0.8313
+step  2100  val 2.3505  val bpb 0.8113
+step  2400  val 2.2587  val bpb 0.7796
+step  2700  val 2.2207  val bpb 0.7665
+step  3000  val 2.2282  val bpb 0.7691
+done in 28.8 min  best val 2.2207  peak 12.47 GB

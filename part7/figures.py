@@ -24,19 +24,16 @@ def main():
             print("skip", fname)
             continue
         d = json.load(open(path))
-        h = d["history"]
+        h = [p for p in d["history"] if p["step"] >= 300]
         ax.plot([p["step"] for p in h], [p["bpb"] for p in h], ls,
-                label=label, color=color, markersize=4)
-        best = min(h, key=lambda p: p["val"])
+                label=label, color=color, markersize=5)
+        best = min(d["history"], key=lambda p: p["val"])
         rows.append((label, best["bpb"], best["step"], d["elapsed_sec"] / 60,
                      d.get("peak_gb"), d["params"], d["emb_frac"]))
 
-    meta = os.path.join(DATA, "teacher_qwen8b_meta.json")
-    if os.path.exists(meta):
-        tb = json.load(open(meta))["val_bpb"]
-        ax.axhline(tb, ls=":", color="#1f77b4", alpha=0.6,
-                   label=f"Qwen3-8B-Base teacher ({tb:.3f})")
-
+    ax.set_ylim(0.70, 1.30)
+    ax.text(0.98, 0.04, "Qwen3-8B-Base teacher itself: 0.592 bits/byte  (below this frame)",
+            transform=ax.transAxes, ha="right", fontsize=9, color="#6b7280")
     ax.set_xlabel("step")
     ax.set_ylabel("validation bits per byte")
     ax.set_title("Distilling from Qwen3-8B-Base into a Qwen3-vocabulary MiniGPT")

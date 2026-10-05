@@ -6,3 +6,6 @@ tokenizers
 mlx
 gguf
 nbformat
+mlx-lm
+transformers
+jupyter

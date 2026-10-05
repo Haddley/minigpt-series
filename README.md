@@ -9,12 +9,14 @@ part number.
 |---|---|---|---|
 | `part1-running/` | [MiniGPT (Part 1)](https://haddley.github.io/posts/minigpt/) | running the trained *exhibit* model, step by step; exporting it to GGUF for llama.cpp | any CPU; [Colab](https://colab.research.google.com/github/Haddley/minigpt-series/blob/main/part1-running/minigpt_follow_along.ipynb) |
 | `part2-growing/` | [MiniGPT (Part 2)](https://haddley.github.io/posts/minigpt-grown/) | growing the exhibit from random numbers, exactly | any CPU; [Colab](https://colab.research.google.com/github/Haddley/minigpt-series/blob/main/part2-growing/minigpt_follow_along_2.ipynb) |
-| `part3-tokenisers/` | [MiniGPT (Part 3)](https://haddley.github.io/posts/minigpt2/) | character vs GPT-2 vs a trained 8k BPE tokeniser, on TinyStories, scored in bits per byte | PyTorch: Apple GPU, CUDA, or CPU |
+| `part3-tokenisers/` | [MiniGPT (Part 3)](https://haddley.github.io/posts/minigpt2/) | character vs GPT-2 vs a trained 8k BPE tokeniser, on TinyStories, scored in bits per byte | PyTorch: Apple GPU, CUDA, or CPU; [Colab](https://colab.research.google.com/github/Haddley/minigpt-series/blob/main/part3-tokenisers/minigpt_follow_along_3.ipynb) |
 | `part4-mlx/` | [MiniGPT (Part 4)](https://haddley.github.io/posts/minigpt3/) | the same model rebuilt in Apple's MLX, benchmarked against PyTorch | Apple Silicon |
 | `part5-modern-block/` | [MiniGPT (Part 5)](https://haddley.github.io/posts/minigpt4/) | the Llama 3.2 block (RMSNorm, RoPE, SwiGLU, GQA), each change ablated | Apple Silicon |
 | `part6-distillation/` | [MiniGPT (Part 6)](https://haddley.github.io/posts/minigpt5/) | logit distillation from GPT-2 and from a same-data 51M teacher | Apple Silicon |
 | `part7-sliding-window/` | [MiniGPT (Part 7)](https://haddley.github.io/posts/minigpt6/) | chunked sliding-window attention; a memory sweep against full attention | Apple Silicon |
 | `part8-qwen3-teacher/` | MiniGPT (Part 8), not yet published | rebuilt on Qwen3's 152k vocabulary; distilled from Qwen3-8B-Base via cached logits | Apple Silicon |
+
+Every folder has a follow-along notebook, `minigpt_follow_along_N.ipynb`, built by the `build_workbook_N.py` next to it. Parts 1 to 3 run in Colab; Parts 4 to 8 use MLX, so their notebooks are for Jupyter on a Mac with Apple Silicon, and start from `notebook_setup.py`.
 
 Parts 1 and 2 use the model code from Jibin Joseph's
 [MiniGPT notebook](https://github.com/jibin10/MiniGPT). `minigpt_notebook.py` downloads

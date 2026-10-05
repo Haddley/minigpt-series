@@ -20,7 +20,7 @@ def code(s): cells.append(nbformat.v4.new_code_cell(s.strip("\n")))
 md(f"""
 # MiniGPT, grown: follow along
 
-This workbook goes with my post [MiniGPT (Part 2)]({POST}). It grows my MiniGPT *exhibit* model from random numbers, using the guessing game, and reproduces the post's numbers on the way: the surprise score, the ladder of four ways to shape the wheel, and the exhibit growing, step by step. At the end, it compares what it grew with my published exhibit, number by number.
+This workbook goes with my post [MiniGPT (Part 2)]({POST}). It grows my MiniGPT *exhibit* model from random numbers, using the guessing game, and reproduces the post's numbers on the way: the surprise score, one training step in slow motion, and the exhibit growing, step by step. At the end, it compares what it grew with my published exhibit, number by number.
 
 Run the cells from top to bottom on a CPU runtime. Everything is quick except the growing itself, which is 3,000 training steps: about 6 minutes on my Mac Studio's CPU, and longer on a free Colab CPU.
 
@@ -94,51 +94,86 @@ for ch in "yea":
     print(f"after 'good m', {{ch!r}} gets {{p[stoi[ch]]:.1%}}: surprise score {{math.log(1 / p[stoi[ch]].item()):.2f}}")""")
 
 md("""
-## 5. Climbing the ladder
+## 5. One training step, as six steps
 
-Four ways to shape the wheel, each scored on the locked-away exam text. Rungs 1 to 3 need no training at all, only counting. One random-number generator draws all three samples, in this order, so they match the post.
+Growing uses Part 1's five steps, with step 5 changed and a step 6 added. Here is the very first step of growing the exhibit, in slow motion, with a fresh copy of the starting machine.
 """)
-code("""g = torch.Generator().manual_seed(7)
+code("""torch.manual_seed(42)
+step_model = MiniGPT(GPTConfig(block_size=128, vocab_size=V, n_layer=4, n_head=4, n_embd=128, dropout=0.1))
+step_opt = torch.optim.AdamW(step_model.parameters(), lr=3e-4)
+rng = torch.Generator().manual_seed(1337)
 
-# rung 1: an even wheel
-print("rung 1, even wheel:   ", round(math.log(V), 2))
-print(decode(torch.randint(0, V, (160,), generator=g).tolist())[:56], "\\n")
+def d_after_goo(m):
+    m.eval()
+    with torch.no_grad():
+        logits, _ = m(torch.tensor([[stoi[ch] for ch in "goo"]]))
+    m.train()
+    return torch.softmax(logits[0, -1], -1)[stoi["d"]].item()
 
-# rung 2: how common each letter is
-counts = torch.bincount(train_data, minlength=V).float() + 1
-p1 = counts / counts.sum()
-print("rung 2, letter counts:", round((-torch.log(p1[val_data])).mean().item(), 2))
-print("biggest slices:", [(chars[i], f"{p1[i]:.1%}") for i in p1.topk(4).indices.tolist()])
-print(decode(torch.multinomial(p1, 160, replacement=True, generator=g).tolist())[:80], "\\n")
+before = d_after_goo(step_model)
+g_before = step_model.token_embedding.weight[stoi["g"], :4].tolist()
 
-# rung 3: count pairs, so the wheel depends on the letter before
-pairs = torch.ones(V, V)
-pairs.index_put_((train_data[:-1], train_data[1:]), torch.ones(len(train_data) - 1), accumulate=True)
-P = pairs / pairs.sum(1, keepdim=True)
-print("rung 3, pair counts:  ", round((-torch.log(P[val_data[:-1], val_data[1:]])).mean().item(), 2))
-q = stoi["q"]
-print("after q:", int(pairs[q].sum().item() - V), "times in the practice text,",
-      int(pairs[q, stoi["u"]].item() - 1), "of them followed by u")
-s = [stoi["\\n"]]
-for _ in range(240):
-    s.append(torch.multinomial(P[s[-1]], 1, generator=g).item())
-print(decode(s[1:])[:160])""")
-md("Is training just a fancy way of counting? Give a machine one dial for every pair of letters, all set to 0, and train it with the guessing game:")
-code("""torch.manual_seed(0)
-pair_dials = nn.Embedding(V, V)
-nn.init.zeros_(pair_dials.weight)
-opt = torch.optim.AdamW(pair_dials.parameters(), lr=0.1, weight_decay=0)
-t = time.time()
-for step in range(3000):
-    ix = torch.randint(0, len(train_data) - 1, (4096,))
-    loss = F.cross_entropy(pair_dials(train_data[ix]), train_data[ix + 1])
-    opt.zero_grad(); loss.backward(); opt.step()
-with torch.no_grad():
-    learned = F.cross_entropy(pair_dials(val_data[:-1]), val_data[1:]).item()
-    after_q = torch.softmax(pair_dials.weight[q], -1)
-print(f"trained in {time.time() - t:.1f} seconds; surprise score {learned:.2f}; after q, u gets {after_q[stoi['u']]:.0%}")""")
-md("Rung 4: my exhibit MiniGPT, which can look up to 128 letters back, scored the same way on the exam text:")
-code("""def exam_score(model, stride=64):   # every 64th snippet of the exam text
+# step 1: 32 snippets of 128 letters, and the real next letter at every position
+ix = torch.randint(len(train_data) - 128, (32,), generator=rng)
+x = torch.stack([train_data[i:i + 128] for i in ix])
+y = torch.stack([train_data[i + 1:i + 129] for i in ix])
+print("one snippet begins:", repr(decode(x[0, :20].tolist())))
+
+# steps 2 to 4: cards, the blocks, and a wheel for every position
+logits, loss = step_model(x, y)
+chance = torch.softmax(logits[0, 0], -1)[y[0, 0]].item()
+print(f"its first wheel gives the real next letter, {chars[y[0, 0]]!r}, a chance of {chance:.2%}")
+
+# step 5: check the answer
+print(f"that guess's surprise score: {math.log(1 / chance):.2f}; the average over all {y.numel():,} guesses: {loss.item():.2f}")
+
+# step 6: nudge every number
+step_opt.zero_grad()
+loss.backward()
+step_opt.step()
+g_after = step_model.token_embedding.weight[stoi["g"], :4].tolist()
+print("the g card's first numbers moved from", [round(v, 5) for v in g_before], "to", [round(v, 5) for v in g_after])
+print(f"the chance of d after goo went from {before:.3%} to {d_after_goo(step_model):.3%}")""")
+
+md("""
+## 6. Following the blame back, by hand
+
+Backpropagation's key moves, worked by hand for the last link of the chain: the exhibit's guess after `good m`, where the real next letter is `y`. Three rules carry the blame from the surprise score back to the answer cards. Then PyTorch's `loss.backward()` does the same for every link, and the two should agree.
+""")
+code("""cap = {}
+hook = exhibit.final_ln.register_forward_hook(lambda mod, inp, out: cap.update(card=out))
+exhibit.requires_grad_(True)
+logits, _ = exhibit(torch.tensor([[stoi[ch] for ch in "good m"]]))
+hook.remove()
+card = cap["card"][0, -1].detach()          # the last working card, after the final normalisation
+scores = logits[0, -1]
+target = stoi["y"]
+loss = F.cross_entropy(scores[None], torch.tensor([target]))
+print(f"surprise score: {loss.item():.3f}")
+
+p = F.softmax(scores, dim=-1).detach()                 # the wheel: 65 chances
+blame_scores = p.clone()
+blame_scores[target] -= 1                              # rule 1: chance, minus 1 for the real letter
+blame_cards = torch.outer(blame_scores, card)          # rule 2: each answer card's blame, scaled by the working card
+blame_biases = blame_scores                            # rule 3: added, so passed on unchanged
+blame_card = exhibit.lm_head.weight.detach().T @ blame_scores   # rule 2 again: back to the working card
+
+for ch in "yeaoz":
+    print(f"{ch!r}: chance {p[stoi[ch]]:.2%}, blame on its score {blame_scores[stoi[ch]]:+.3f}, "
+          f"blame on its answer card's first number {blame_cards[stoi[ch], 0]:+.3f}")
+
+exhibit.zero_grad()
+loss.backward()                                        # PyTorch walks the whole chain
+print("biggest difference from loss.backward():", (blame_cards - exhibit.lm_head.weight.grad).abs().max().item())
+exhibit.zero_grad()
+exhibit.requires_grad_(False)""")
+
+md("""
+## 7. Growing the exhibit
+
+This is exactly how I grew the exhibit: the notebook's model and settings, 3,000 steps of 32 snippets of 128 letters, with every random choice fixed in advance. Five times along the way, it stops to sit the exam, write from `ROMEO:`, and report the start of the `g` card and the chance of `d` after `goo`.
+""")
+code("""def exam_score(model, stride=64):   # every 64th snippet of the locked-away exam text
     scores = []
     with torch.no_grad():
         for k in range(0, len(val_data) - 129, 128 * stride):
@@ -148,14 +183,7 @@ code("""def exam_score(model, stride=64):   # every 64th snippet of the exam tex
             scores.append(model(x, y)[1].item())
     return sum(scores) / len(scores)
 
-s4 = exam_score(exhibit)
-print(f"rung 4, my exhibit:    {s4:.2f}, as unsure as choosing between {math.exp(s4):.1f} letters")""")
-
-md("""
-## 6. Growing the exhibit
-
-This is exactly how I grew the exhibit: the notebook's model and settings, 3,000 steps of 32 snippets of 128 letters, with every random choice fixed in advance. Five times along the way, it stops to sit the exam, write from `ROMEO:`, and report the start of the `g` card and the chance of `d` after `goo`.
-""")
+print(f"the published exhibit's exam score: {exam_score(exhibit):.2f}")""")
 code("""torch.use_deterministic_algorithms(True)
 torch.set_num_threads(4)
 
@@ -198,7 +226,7 @@ for step in range(3001):
 print(f"grown in {(time.time() - t) / 60:.1f} minutes")""")
 
 md("""
-## 7. The payoff: is it the exhibit?
+## 8. The payoff: is it the exhibit?
 
 Compare every one of the 826,433 grown numbers with my published exhibit. On my Mac Studio's CPU they match exactly. A different computer does some of its arithmetic in a slightly different order, so on Colab expect a machine that is very close, but not identical to the last digit.
 """)

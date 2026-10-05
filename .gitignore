@@ -1,9 +1,10 @@
 __pycache__/
 .venv/
-part2/data/
+part3-tokenisers/data/
 */data/
 */runs/*.out
 */runs/*.log
 *.pt
 *.safetensors
 *.npy
+data/

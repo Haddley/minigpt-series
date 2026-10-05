@@ -4,3 +4,5 @@ matplotlib
 tiktoken
 tokenizers
 mlx
+gguf
+nbformat

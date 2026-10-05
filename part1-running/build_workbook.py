@@ -196,7 +196,7 @@ md(f"""
 [llama.cpp](https://github.com/ggml-org/llama.cpp) runs models stored as a single GGUF file. My [export script](https://github.com/Haddley/minigpt-series/blob/main/part1-running/export_gguf.py) maps MiniGPT onto llama.cpp's GPT-2 design. This cell exports the file, then gets llama.cpp: the Homebrew one if you have it (`brew install llama.cpp` on a Mac), or else the official Linux build, which is what Colab uses.
 """)
 code(f"""import os, subprocess, sys
-subprocess.run([sys.executable, "-m", "pip", "install", "-q", "--disable-pip-version-check", "gguf"], check=True)
+subprocess.run([sys.executable, "-m", "pip", "install", "-q", "--disable-pip-version-check", "gguf==0.19.0"], check=True)
 urllib.request.urlretrieve("{REPO}/export_gguf.py", "export_gguf.py")
 result = subprocess.run([sys.executable, "export_gguf.py", "exhibit.pt", "exhibit.gguf"],
                         check=True, capture_output=True, text=True)

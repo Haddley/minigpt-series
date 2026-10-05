@@ -36,7 +36,7 @@ def run(*args):
     print(result.stdout + result.stderr)
     result.check_returncode()
 
-subprocess.run([sys.executable, "-m", "pip", "install", "-q", "--disable-pip-version-check", "tiktoken", "tokenizers"], check=True)
+subprocess.run([sys.executable, "-m", "pip", "install", "-q", "--disable-pip-version-check", "tiktoken==0.14.0", "tokenizers==0.23.2"], check=True)
 if not os.path.exists("minigpt-series"):
     subprocess.run(["git", "clone", "-q", "https://github.com/Haddley/minigpt-series.git"], check=True)
 os.chdir("minigpt-series/part3-tokenisers")

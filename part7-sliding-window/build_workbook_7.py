@@ -61,5 +61,19 @@ for T in (512, 1024, 2048):
         peak, dt = race(T, mode)
         print(f"row {T:>5}  {mode:8}  most memory {peak:6.2f} GB   {dt * 1000:7.1f} ms per step")""")
 
+md("""
+## 4. The secret word: what is a long row for?
+
+The post's secret-word test: three machines asked for a word hidden 100 to 970 pieces back. These are the saved results of `run_secret.sh`, which trains the three machines: about 45 minutes, so run it from a terminal with `./run_secret.sh` if you want to repeat it.
+""")
+code("""import json
+names = {"secret256": "256-position row", "secret1024": "1,024 positions, full attention",
+         "secretwin256": "1,024 positions, 256-position window"}
+gaps = (100, 200, 400, 700, 970)
+print(f"{'machine':38}" + "".join(f"{g:>7} back" for g in gaps))
+for tag, name in names.items():
+    r = json.load(open(f"runs/secret_{tag}.json"))
+    print(f"{name:38}" + "".join(f"{r[f'gap_{g}']['right']:>12.1%}" for g in gaps))""")
+
 nbformat.write(nb, "minigpt_follow_along_7.ipynb")
 print(len(nb.cells), "cells")

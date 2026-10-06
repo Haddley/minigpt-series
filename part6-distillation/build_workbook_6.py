@@ -69,5 +69,17 @@ for tag in ("baseline", "gpt2"):
     best = min(h["history"], key=lambda p: p["val"])
     print(f"{tag:9} best bits per byte {best['bpb']:.4f}, peak memory {h['peak_gb']:.1f} GB, {h['elapsed_sec'] / 60:.1f} minutes")""")
 
+md("""
+## 4. Why the weaker teacher helped more
+
+The post's capacity-gap test: how far each student's wheels ended up from each teacher's (KL divergence, 0 = identical), and how often their biggest slices match. These are the saved results of `run_gap.sh`, which retrains the teacher and three students and then runs `measure_gap.py`: about 95 minutes, so run it from a terminal with `./run_gap.sh` if you want to repeat it.
+""")
+code("""import json
+gap = json.load(open("runs/capacity_gap.json"))
+print(f"{'student':28} {'from MiniGPT-512':>22} {'from TinyStories-33M':>24}")
+for student in ("no teacher", "taught by MiniGPT-512", "taught by TinyStories-33M"):
+    a, b = gap[f"{student} | MiniGPT-512"], gap[f"{student} | TinyStories-33M"]
+    print(f"{student:28} {a['kl']:10.2f} ({a['top1_agree']:.1%})  {b['kl']:12.2f} ({b['top1_agree']:.1%})")""")
+
 nbformat.write(nb, "minigpt_follow_along_6.ipynb")
 print(len(nb.cells), "cells")

@@ -87,7 +87,7 @@ Parts 4 to 7 import code and data from earlier folders, so run Part 3's
 | Part 2: regrowing the exhibit | 826,433 of 826,433 numbers identical | deterministic CPU training, about 6 minutes |
 | Part 3: character tokeniser | 1.04 bits/byte | lowest raw loss, worst bits/byte |
 | Part 3: trained 8k BPE | 0.70 bits/byte | matches GPT-2's 50k vocabulary at under half the parameters |
-| Part 4: MLX vs PyTorch on MPS | | `mx.compile` 16% faster, 15% less memory |
+| Part 4: MLX vs PyTorch on MPS | | `mx.compile` 16 to 20% faster, 15% less memory |
 | Part 5: modern Llama block | 0.672 to 0.678 bits/byte | three random starts, vs 0.689 for the GPT block; the gain is entirely RoPE |
 | Part 6: distilled from a same-data teacher | 0.694 bits/byte | vs 0.756 baseline; GPT-2 as teacher does not help |
 | Part 6: why that teacher helped most | KL 0.25 vs 0.96 | its student got nearly 4 times closer to it than TinyStories-33M's student got to TinyStories-33M |

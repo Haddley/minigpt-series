@@ -1,0 +1,15 @@
+Loading weights:   0%|          | 0/56 [00:00<?, ?it/s]Loading weights: 100%|██████████| 56/56 [00:00<00:00, 32676.83it/s]
+[transformers] [1mGPTNeoForCausalLM LOAD REPORT[0m from: roneneldan/TinyStories-33M
+Key                                                   | Status     |  | 
+------------------------------------------------------+------------+--+-
+transformer.h.{0, 1, 2, 3}.attn.attention.bias        | UNEXPECTED |  | 
+transformer.h.{0, 1, 2, 3}.attn.attention.masked_bias | UNEXPECTED |  | 
+
+Notes:
+- UNEXPECTED:	can be ignored when loading from different task/architecture; not ok if you expect identical arch.
+no teacher                   vs MiniGPT-512       KL 0.4560   same top slice 70.5%
+no teacher                   vs TinyStories-33M   KL 1.2293   same top slice 58.8%
+taught by MiniGPT-512        vs MiniGPT-512       KL 0.2517   same top slice 76.6%
+taught by MiniGPT-512        vs TinyStories-33M   KL 1.0820   same top slice 61.5%
+taught by TinyStories-33M    vs MiniGPT-512       KL 0.4717   same top slice 72.0%
+taught by TinyStories-33M    vs TinyStories-33M   KL 0.9605   same top slice 62.7%

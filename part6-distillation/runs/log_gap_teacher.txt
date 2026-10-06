@@ -1,0 +1,13 @@
+teacher dim 512 layers 8  params 51,066,368
+step     0  val 11.2378  bpb 3.9861
+step   500  val 2.8784  bpb 1.0210
+step  1000  val 2.4711  bpb 0.8765
+step  1500  val 2.2593  bpb 0.8014
+step  2000  val 2.1326  bpb 0.7564
+step  2500  val 2.0117  bpb 0.7136
+step  3000  val 1.9263  bpb 0.6833
+step  3500  val 1.8829  bpb 0.6679
+step  4000  val 1.8611  bpb 0.6601
+step  4500  val 1.8278  bpb 0.6483
+step  5000  val 1.8043  bpb 0.6400
+teacher done in 35.1 min  best val 1.8043

@@ -90,7 +90,9 @@ Parts 4 to 7 import code and data from earlier folders, so run Part 3's
 | Part 4: MLX vs PyTorch on MPS | | `mx.compile` 16% faster, 15% less memory |
 | Part 5: modern Llama block | 0.672 to 0.678 bits/byte | three random starts, vs 0.689 for the GPT block; the gain is entirely RoPE |
 | Part 6: distilled from a same-data teacher | 0.694 bits/byte | vs 0.756 baseline; GPT-2 as teacher does not help |
+| Part 6: why that teacher helped most | KL 0.25 vs 0.96 | its student got nearly 4 times closer to it than TinyStories-33M's student got to TinyStories-33M |
 | Part 7: 256-token sliding window at 1,024 context | 0.673 bits/byte | the same as full attention, in less memory |
+| Part 7: a secret word 970 tokens back | 100% vs 4% | full 1,024 attention finds it every time; a 256 window only guesses, despite 6 blocks |
 
 `tools/render_term.py` renders captured output as terminal-style PNGs for the posts
 (the runs are headless, so there is no window to screenshot).

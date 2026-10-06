@@ -1,0 +1,26 @@
+{
+  "no teacher | MiniGPT-512": {
+    "kl": 0.45601517260074614,
+    "top1_agree": 0.7047688802083333
+  },
+  "no teacher | TinyStories-33M": {
+    "kl": 1.2292680660883586,
+    "top1_agree": 0.5875
+  },
+  "taught by MiniGPT-512 | MiniGPT-512": {
+    "kl": 0.25173058758179345,
+    "top1_agree": 0.7659342447916667
+  },
+  "taught by MiniGPT-512 | TinyStories-33M": {
+    "kl": 1.082012649377187,
+    "top1_agree": 0.6149739583333333
+  },
+  "taught by TinyStories-33M | MiniGPT-512": {
+    "kl": 0.4717473775148392,
+    "top1_agree": 0.7197916666666667
+  },
+  "taught by TinyStories-33M | TinyStories-33M": {
+    "kl": 0.9604676942030589,
+    "top1_agree": 0.626953125
+  }
+}

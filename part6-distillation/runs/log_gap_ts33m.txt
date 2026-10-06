@@ -1,0 +1,23 @@
+tag gap_ts33m  alpha 0.5  temp 2.0  student params 30,035,328
+Loading weights:   0%|          | 0/56 [00:00<?, ?it/s]Loading weights: 100%|██████████| 56/56 [00:00<00:00, 32878.08it/s]
+[transformers] [1mGPTNeoForCausalLM LOAD REPORT[0m from: roneneldan/TinyStories-33M
+Key                                                   | Status     |  | 
+------------------------------------------------------+------------+--+-
+transformer.h.{0, 1, 2, 3}.attn.attention.bias        | UNEXPECTED |  | 
+transformer.h.{0, 1, 2, 3}.attn.attention.masked_bias | UNEXPECTED |  | 
+
+Notes:
+- UNEXPECTED:	can be ignored when loading from different task/architecture; not ok if you expect identical arch.
+teacher roneneldan/TinyStories-33M loaded (torch, mps) and frozen
+step     0  train 11.2836  val 11.2850  val bpb 4.0028
+step   300  train 3.5633  val 3.5764  val bpb 1.2686
+step   600  train 2.9498  val 3.0158  val bpb 1.0697
+step   900  train 2.6029  val 2.6985  val bpb 0.9572
+step  1200  train 2.4193  val 2.4569  val bpb 0.8715
+step  1500  train 2.2448  val 2.3398  val bpb 0.8299
+step  1800  train 2.1295  val 2.2051  val bpb 0.7822
+step  2100  train 2.0715  val 2.1562  val bpb 0.7648
+step  2400  train 1.9968  val 2.0571  val bpb 0.7297
+step  2700  train 1.9757  val 2.0419  val bpb 0.7243
+step  3000  train 1.9398  val 2.0292  val bpb 0.7198
+done in 22.44 min  best val 2.0292  peak 9.89 GB

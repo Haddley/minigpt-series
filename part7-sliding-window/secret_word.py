@@ -2,8 +2,8 @@
 
 Each test row hides a secret word early on, " Lily's secret word is apple.", fills the gap with
 ordinary stories, and ends by asking for it, " Lily's secret word is". Half of every training batch
-is rows like these; the other half is ordinary stories. Then each machine is asked for the word
-when it is about 100 pieces back, and when it is about 1,000 pieces back.
+is rows like these; the other half is ordinary stories. Half the secret rows have a short gap, so that every machine can learn the trick; then each machine
+is asked for the word from 100 to 970 pieces back.
 
     python secret_word.py --tag secret256    --block-size 256  --batch-size 128
     python secret_word.py --tag secret1024   --block-size 1024 --batch-size 32
@@ -42,8 +42,9 @@ def secret_row(ids, tok, rng, gap=None):
     name, word = rng.choice(NAMES), rng.choice(WORDS)
     secret = tok.encode(f" {name}'s secret word is {word}.")
     question = tok.encode(f" {name}'s secret word is") + tok.encode(f" {word}")
-    if gap is None:
-        gap = int(rng.integers(50, ROW - len(secret) - len(question) - 1))
+    if gap is None:   # half short gaps, so every machine can learn the trick; half long ones
+        longest = ROW - len(secret) - len(question) - 1
+        gap = int(rng.integers(20, 200)) if rng.random() < 0.5 else int(rng.integers(200, longest))
     before = ROW - len(secret) - gap - len(question)
     s = int(rng.integers(0, len(ids) - ROW))
     row = np.concatenate([ids[s:s + before], secret, ids[s + before:s + before + gap], question])
@@ -56,8 +57,7 @@ def mixed_batch(ids, tok, block, size, rng):
     for k in range(size):
         if k % 2 == 0:
             row, _ = secret_row(ids, tok, rng)
-            s = int(rng.integers(0, ROW - block))      # a 256-row machine sees a random slice
-            xs.append(row[s:s + block]); ys.append(row[s + 1:s + block + 1])
+            xs.append(row[-block - 1:-1]); ys.append(row[-block:])   # the end of the row, where the question is
         else:
             x, y = batch(ids, block, 1, rng)
             xs.append(x[0]); ys.append(y[0])
@@ -122,7 +122,8 @@ def main():
     model.eval()
     result = {"tag": args.tag, "block_size": args.block_size, "window": args.window,
               "params": n_params, "minutes": minutes}
-    for gap in (100, 1000 - 30):
+    mx.save_safetensors(os.path.join(OUT, f"ckpt_{args.tag}.safetensors"), dict(tree_flatten(model.parameters())))
+    for gap in (100, 200, 400, 700, 970):
         acc, p = accuracy(model, val_ids, tok, args.block_size, gap, n=args.eval_n)
         result[f"gap_{gap}"] = {"right": acc, "chance_on_right_word": p}
         print(f"word {gap} pieces back: right {acc:.1%}, average chance on the right word {p:.1%}", flush=True)

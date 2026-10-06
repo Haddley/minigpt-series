@@ -16,7 +16,7 @@ def code(s): cells.append(nbformat.v4.new_code_cell(s.strip("\n")))
 md(f"""
 # MiniGPT reads further: follow along
 
-This notebook goes with my post [MiniGPT (Part 7)]({POST}). It counts how fast attention's matches grow, checks that the chunked sliding window gives exactly the right answers, and races full attention against the window for memory.
+This notebook goes with my post [MiniGPT (Part 7)]({POST}). It counts how fast attention's matches grow, checks that the chunked sliding window gives exactly the right answers, races full attention against the window for memory, and shows the secret-word results: what a long row is for.
 
 **It needs a Mac with Apple Silicon**, because MLX only runs there. Open it in Jupyter from a clone of [minigpt-series](https://github.com/Haddley/minigpt-series), with the packages from its `requirements.txt` installed.
 """)

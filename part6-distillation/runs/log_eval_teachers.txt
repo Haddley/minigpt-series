@@ -1,0 +1,4 @@
+gpt2:  val CE 2.7206  bits/byte 0.9650
+gpt2-xl:  val CE 2.2520  bits/byte 0.7988
+torch:roneneldan/TinyStories-33M:  val CE 1.3159  bits/byte 0.4668
+runs/teacher.safetensors:  val CE 1.8177  bits/byte 0.6447

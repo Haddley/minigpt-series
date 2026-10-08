@@ -5,7 +5,7 @@ read. It does not train anything.
 
 - `readable_minigpt.py` is the whole program. It runs as an ordinary script, and it is written in
   "percent" format, so its explanation cells and code cells also make a notebook.
-- `readable_minigpt.ipynb` is that notebook, saved with its outputs.
+- `readable_minigpt.ipynb` is that notebook, saved with its outputs. [Open it in Colab](https://colab.research.google.com/github/Haddley/minigpt-series/blob/main/readable/readable_minigpt.ipynb).
 - `build_readable_notebook.py` rebuilds and reruns the notebook from the `.py` file.
 
 Every value has its own descriptive name (no `x = x + ...`), every shape is written down, and every

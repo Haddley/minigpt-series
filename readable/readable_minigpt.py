@@ -544,7 +544,11 @@ for letter in "o d":
 # %%
 try:
     import sys
-    sys.path.insert(0, str(Path.cwd().parent))
+    sys.path.insert(0, str(Path.cwd().parent))   # the series repo, when this runs from readable/
+    if not (Path.cwd().parent / "minigpt_notebook.py").exists():   # in Colab, which has only this notebook
+        urllib.request.urlretrieve(
+            "https://raw.githubusercontent.com/Haddley/minigpt-series/main/minigpt_notebook.py", "minigpt_notebook.py")
+        sys.path.insert(0, str(Path.cwd()))
     from minigpt_notebook import load_model_classes   # downloads and runs the original model code
     original_namespace = {}
     load_model_classes(original_namespace)

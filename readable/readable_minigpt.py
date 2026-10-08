@@ -34,7 +34,7 @@ import torch  # PyTorch: a library for tables of numbers ("tensors") and fast ar
 # %%
 NUMBERS_PER_VECTOR = 128            # every letter is represented by a list (a "vector") of 128 numbers
 NUMBER_OF_BLOCKS = 4                # the model runs its hidden states through 4 blocks, one after another
-HEADS_PER_BLOCK = 4                 # each block's attention runs 4 times side by side
+HEADS_PER_BLOCK = 4                 # each block's attention runs 4 times side by side: 4 "head slices"
 NUMBERS_PER_HEAD = NUMBERS_PER_VECTOR // HEADS_PER_BLOCK   # so each head works with 128 / 4 = 32 numbers
 MOST_LETTERS_THE_MODEL_CAN_SEE = 128   # the "context length": positions beyond this have no embedding
 MLP_WIDTH = 4 * NUMBERS_PER_VECTOR  # inside each MLP, 128 numbers are widened to 512, then narrowed back
@@ -79,16 +79,18 @@ class TrainedBlock:
     stretch_before_attention: torch.Tensor      # [128]
     shift_before_attention: torch.Tensor        # [128]
 
-    # Attention makes three new vectors from each hidden state. Each comes from its own table of
-    # weights: 128 rows of 128 numbers, plus 128 biases. (attn.query, attn.key, attn.value)
-    query_weights: torch.Tensor                 # [128, 128]
-    query_biases: torch.Tensor                  # [128]
-    key_weights: torch.Tensor                   # [128, 128]
-    key_biases: torch.Tensor                    # [128]
-    value_weights: torch.Tensor                 # [128, 128]
-    value_biases: torch.Tensor                  # [128]
+    # Attention makes three new vectors from each hidden state: a looking query, a looked-at key, and a
+    # passed-on value (usually just called the query, the key, and the value; section 6 explains the
+    # extra words). Each comes from its own table of weights: 128 rows of 128 numbers, plus 128 biases.
+    # (attn.query, attn.key, attn.value)
+    looking_query_weights: torch.Tensor                 # [128, 128]
+    looking_query_biases: torch.Tensor                  # [128]
+    looked_at_key_weights: torch.Tensor                   # [128, 128]
+    looked_at_key_biases: torch.Tensor                    # [128]
+    passed_on_value_weights: torch.Tensor                 # [128, 128]
+    passed_on_value_biases: torch.Tensor                  # [128]
 
-    # After the four heads have each collected 32 numbers, this table mixes the 128 numbers they
+    # After the four head slices have each collected 32 numbers, this table mixes the 128 numbers they
     # found into the 128 numbers that are added to the hidden state. (attn.proj)
     head_mixing_weights: torch.Tensor           # [128, 128]
     head_mixing_biases: torch.Tensor            # [128]
@@ -129,12 +131,12 @@ def name_the_stored_tables(tables: dict) -> TrainedModel:
         blocks.append(TrainedBlock(
             stretch_before_attention=tables[prefix + "ln1.weight"],
             shift_before_attention=tables[prefix + "ln1.bias"],
-            query_weights=tables[prefix + "attn.query.weight"],
-            query_biases=tables[prefix + "attn.query.bias"],
-            key_weights=tables[prefix + "attn.key.weight"],
-            key_biases=tables[prefix + "attn.key.bias"],
-            value_weights=tables[prefix + "attn.value.weight"],
-            value_biases=tables[prefix + "attn.value.bias"],
+            looking_query_weights=tables[prefix + "attn.query.weight"],
+            looking_query_biases=tables[prefix + "attn.query.bias"],
+            looked_at_key_weights=tables[prefix + "attn.key.weight"],
+            looked_at_key_biases=tables[prefix + "attn.key.bias"],
+            passed_on_value_weights=tables[prefix + "attn.value.weight"],
+            passed_on_value_biases=tables[prefix + "attn.value.bias"],
             head_mixing_weights=tables[prefix + "attn.proj.weight"],
             head_mixing_biases=tables[prefix + "attn.proj.bias"],
             stretch_before_mlp=tables[prefix + "ln2.weight"],
@@ -303,8 +305,8 @@ print("shares for scores [2, 1, 0]:", scores_to_shares(torch.tensor([2.0, 1.0, 0
 # |---|---|---|
 # | `letter_ids` | [*n*] | each letter's ID |
 # | `hidden_states` | [*n*, 128] | one vector per letter: it starts as token embedding + position embedding, and every block adds to it |
-# | `queries`, `keys`, `values` | [*n*, 128] each | made inside attention, from the hidden states; each head uses 32 of the 128 numbers |
-# | `attention_shares` | [*n*, *n*] for each head | row *i*: how much of its attention position *i* gives to each position up to itself |
+# | `looking_queries`, `looked_at_keys`, `passed_on_values` | [*n*, 128] each | made inside attention, from the hidden states; each head slice uses 32 of the 128 numbers |
+# | `attention_shares` | [*n*, *n*] for each head slice | row *i*: how much of its attention position *i* gives to each position up to itself |
 # | `widened` | [*n*, 512] | inside the MLP, between widening and narrowing |
 # | `final_hidden_state` | [128] | the last letter's hidden state, after all four blocks and the final normalisation |
 # | `scores` | [65] | one score (a "logit") for each letter that could come next |
@@ -350,20 +352,30 @@ print("  position 3:", example_start[2][:3])
 # This is the only place in the model where one letter's hidden state is affected by another's.
 #
 # For every position, attention makes three vectors from its (normalised) hidden state, each with its
-# own table of weights: a **query**, a **key**, and a **value**. Then, for each head separately:
+# own table of weights. They are usually called the **query**, the **key**, and the **value**. Those
+# names suggest a meaning that nobody has shown the numbers have, so I add a word to each that says
+# only what it does in the arithmetic:
 #
-# 1. Each position's query is compared with the key of every position up to and including itself, by a
-#    dot product. A big result counts as a good match.
-# 2. The match scores are divided by √32, the square root of the numbers per head. The 2017 authors'
+# - the **looking query** is used when this position looks back at the others;
+# - the **looked-at key** is used when another position looks at this one;
+# - the **passed-on value** is what this position passes on to whoever looks at it.
+#
+# Attention runs four times side by side, each time on its own 32 of the 128 numbers. Each of these is
+# usually called a **head**; here it is a **head slice**, because that is all it is: a slice of the
+# columns. Then, for each head slice separately:
+#
+# 1. Each position's looking query is compared with the looked-at key of every position up to and
+#    including itself, by a dot product. A big result counts as a good match.
+# 2. The match scores are divided by √32, the square root of the numbers per head slice. The 2017 authors'
 #    reason is a suspicion, in their words: "We suspect that for large values of d_k, the dot products
 #    grow large in magnitude, pushing the softmax function into regions where it has extremely small
 #    gradients" (https://arxiv.org/abs/1706.03762, section 3.2.1).
 # 3. Scores for later positions are set to minus infinity, so softmax gives them a share of exactly 0.
 #    A letter may not look ahead, because the next letter is what it is trying to guess.
 # 4. Softmax turns each position's scores into shares that add up to 1.
-# 5. Each position collects the values of the earlier positions, weighted by those shares.
+# 5. Each position collects the passed-on values of the earlier positions, weighted by those shares.
 #
-# Finally, the four heads' 32-number findings are laid side by side (128 numbers again) and mixed by
+# Finally, the four head slices' 32-number findings are laid side by side (128 numbers again) and mixed by
 # one more table of weights.
 #
 # **What we do not know.** The names "query", "key", and "value" come from database lookup, and they
@@ -388,54 +400,54 @@ def attention(hidden_states: torch.Tensor, block: TrainedBlock) -> torch.Tensor:
     number_of_positions = hidden_states.shape[0]
     normalised = normalise(hidden_states, block.stretch_before_attention, block.shift_before_attention)
 
-    queries = apply_weights(normalised, block.query_weights, block.query_biases)   # [n, 128]
-    keys = apply_weights(normalised, block.key_weights, block.key_biases)          # [n, 128]
-    values = apply_weights(normalised, block.value_weights, block.value_biases)    # [n, 128]
+    looking_queries = apply_weights(normalised, block.looking_query_weights, block.looking_query_biases)      # [n, 128]
+    looked_at_keys = apply_weights(normalised, block.looked_at_key_weights, block.looked_at_key_biases)      # [n, 128]
+    passed_on_values = apply_weights(normalised, block.passed_on_value_weights, block.passed_on_value_biases)  # [n, 128]
 
     # may_look_at[i][j] is True when position i may look at position j: only j <= i.
     may_look_at = torch.tril(torch.ones(number_of_positions, number_of_positions, dtype=torch.bool))
 
-    findings_of_each_head = []
-    for head in range(HEADS_PER_BLOCK):
-        first_column = head * NUMBERS_PER_HEAD
+    findings_of_each_head_slice = []
+    for head_slice in range(HEADS_PER_BLOCK):
+        first_column = head_slice * NUMBERS_PER_HEAD
         after_last_column = first_column + NUMBERS_PER_HEAD
-        head_queries = queries[:, first_column:after_last_column]   # [n, 32]
-        head_keys = keys[:, first_column:after_last_column]         # [n, 32]
-        head_values = values[:, first_column:after_last_column]     # [n, 32]
+        head_looking_queries = looking_queries[:, first_column:after_last_column]    # [n, 32]
+        head_looked_at_keys = looked_at_keys[:, first_column:after_last_column]      # [n, 32]
+        head_passed_on_values = passed_on_values[:, first_column:after_last_column]  # [n, 32]
 
-        # match_scores[i][j]: position i's query · position j's key
-        match_scores = head_queries @ head_keys.T                           # [n, n]
+        # match_scores[i][j]: position i's looking query · position j's looked-at key
+        match_scores = head_looking_queries @ head_looked_at_keys.T          # [n, n]
         shrunk_scores = match_scores / math.sqrt(NUMBERS_PER_HEAD)          # [n, n]
         scores_without_later_positions = shrunk_scores.masked_fill(~may_look_at, float("-inf"))
         attention_shares = scores_to_shares(scores_without_later_positions)  # [n, n], rows add up to 1
 
-        # Each position collects every position's values, weighted by its shares of attention.
-        what_this_head_collected = attention_shares @ head_values           # [n, 32]
-        findings_of_each_head.append(what_this_head_collected)
+        # Each position collects every position's passed-on values, weighted by its shares of attention.
+        what_this_head_slice_collected = attention_shares @ head_passed_on_values   # [n, 32]
+        findings_of_each_head_slice.append(what_this_head_slice_collected)
 
-    all_heads_side_by_side = torch.cat(findings_of_each_head, dim=-1)       # [n, 128]
-    return apply_weights(all_heads_side_by_side, block.head_mixing_weights, block.head_mixing_biases)
+    all_head_slices_side_by_side = torch.cat(findings_of_each_head_slice, dim=-1)   # [n, 128]
+    return apply_weights(all_head_slices_side_by_side, block.head_mixing_weights, block.head_mixing_biases)
 
 
 # %% [markdown]
-# The same arithmetic, one head, with the real numbers for `goo`: position 3's shares of attention in
-# block 1, head 1. (These are the numbers in Part 1's attention section: 4.0%, 92.9%, and 3.1%.)
+# The same arithmetic, one head slice, with the real numbers for `goo`: position 3's shares of attention
+# in block 1, head slice 1. (These are the numbers in Part 1's attention section: 4.0%, 92.9%, and 3.1%.)
 
 # %%
-def attention_shares_for_one_head(hidden_states, block, head):
-    """The [n, n] table of shares for one head, worked out exactly as in attention() above."""
+def attention_shares_for_one_head_slice(hidden_states, block, head_slice):
+    """The [n, n] table of shares for one head slice, worked out exactly as in attention() above."""
     n = hidden_states.shape[0]
     normalised = normalise(hidden_states, block.stretch_before_attention, block.shift_before_attention)
-    columns = slice(head * NUMBERS_PER_HEAD, (head + 1) * NUMBERS_PER_HEAD)
-    head_queries = apply_weights(normalised, block.query_weights, block.query_biases)[:, columns]
-    head_keys = apply_weights(normalised, block.key_weights, block.key_biases)[:, columns]
+    columns = slice(head_slice * NUMBERS_PER_HEAD, (head_slice + 1) * NUMBERS_PER_HEAD)
+    head_looking_queries = apply_weights(normalised, block.looking_query_weights, block.looking_query_biases)[:, columns]
+    head_looked_at_keys = apply_weights(normalised, block.looked_at_key_weights, block.looked_at_key_biases)[:, columns]
     may_look_at = torch.tril(torch.ones(n, n, dtype=torch.bool))
-    shrunk_scores = head_queries @ head_keys.T / math.sqrt(NUMBERS_PER_HEAD)
+    shrunk_scores = head_looking_queries @ head_looked_at_keys.T / math.sqrt(NUMBERS_PER_HEAD)
     return scores_to_shares(shrunk_scores.masked_fill(~may_look_at, float("-inf")))
 
 
-shares = attention_shares_for_one_head(example_start, model.blocks[0], head=0)
-print("position 3's shares of attention, block 1, head 1:", [f"{s:.1%}" for s in shares[2].tolist()])
+shares = attention_shares_for_one_head_slice(example_start, model.blocks[0], head_slice=0)
+print("position 3's shares of attention, block 1, head slice 1:", [f"{s:.1%}" for s in shares[2].tolist()])
 
 # %% [markdown]
 # ## 7. The MLP: each letter on its own

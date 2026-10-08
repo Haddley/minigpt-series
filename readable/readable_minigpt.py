@@ -602,14 +602,26 @@ def spin_the_wheel(chances: torch.Tensor, random_generator: torch.Generator) -> 
     return min(landed_on, len(chances) - 1)                      # a safety net for rounding
 
 
+def choose_next_letter(text: str, model: TrainedModel, temperature: float, keep_biggest: int,
+                       random_generator: torch.Generator) -> str:
+    """The whole model, top to bottom: one line for each step in the post's whole-program picture."""
+    letter_ids = letters_to_ids(text)[-MOST_LETTERS_THE_MODEL_CAN_SEE:]                                 # step 1
+    starting_hidden_states = first_hidden_states(letter_ids, model)                                     # step 2
+    hidden_states_after_each_block = run_all_blocks(starting_hidden_states, model)                     # step 3
+    last_letters_hidden_state = hidden_states_after_each_block[-1][-1]                                 # step 4
+    final_hidden_state = normalise(last_letters_hidden_state, model.final_stretch, model.final_shift)  # step 5
+    scores = model.next_letter_rows @ final_hidden_state + model.next_letter_biases                    # step 6
+    chances = chances_from_scores(scores, temperature, keep_biggest)                                   # step 7
+    next_letter_id = spin_the_wheel(chances, random_generator)                                         # step 8
+    return VOCABULARY[next_letter_id]
+
+
 def write(start: str, letters_to_add: int, model: TrainedModel,
           temperature: float = 0.8, keep_biggest: int = 65, seed: int = 0) -> str:
     random_generator = torch.Generator().manual_seed(seed)
     text_so_far = start
     for _ in range(letters_to_add):
-        scores = scores_for_next_letter(text_so_far, model)
-        chances = chances_from_scores(scores, temperature, keep_biggest)
-        next_letter = VOCABULARY[spin_the_wheel(chances, random_generator)]
+        next_letter = choose_next_letter(text_so_far, model, temperature, keep_biggest, random_generator)
         text_so_far = text_so_far + next_letter   # the only name that changes: the text itself grows
     return text_so_far
 
@@ -620,6 +632,10 @@ print()
 print(write("ROMEO:\n", 200, model, temperature=0.8, seed=1))
 
 # %% [markdown]
+# `choose_next_letter` is the whole model on one screen: steps 1 to 6 are the same lines as
+# `scores_for_next_letter` in section 9, and steps 7 and 8 choose the letter. Every other function in
+# this program is one of the pieces it calls.
+#
 # `text_so_far = text_so_far + next_letter` is the one place where a name is reused for a new value.
 # I left it, because "the text so far" really is one thing that grows letter by letter, and the loop
 # would be harder to follow with a new name for every length.

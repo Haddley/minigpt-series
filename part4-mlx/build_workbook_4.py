@@ -29,7 +29,7 @@ sys.path.insert(0, os.path.abspath("."))
 from notebook_setup import setup
 run = setup("part4-mlx")""")
 
-md("## 1. The same machine, in two engines\n\nBuild Part 3's PyTorch machine and the MLX one with the same 8,192 token cards, and count their numbers.")
+md("## 1. The same machine, in two engines\n\nBuild Part 3's PyTorch machine and the MLX one with the same 8,192 token embeddings, and count their numbers.")
 code("""import importlib.util
 import mlx.core as mx
 from mlx.utils import tree_flatten

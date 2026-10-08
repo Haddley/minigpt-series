@@ -56,7 +56,7 @@ train_data, val_data = data[:n], data[n:]
 print(f"{len(text):,} letters, {V} different letters")
 print(f"practice text: {len(train_data):,} letters; locked-away exam text: {len(val_data):,} letters")""")
 
-md("## 3. Starting from nothing\n\nA freshly built machine has random numbers on every dial, so its wheel is almost even: every letter gets a chance close to 1 in 65.")
+md("## 3. Starting from nothing\n\nA freshly built machine has random numbers in every parameter, so its wheel is almost even: every letter gets a chance close to 1 in 65.")
 code("""torch.manual_seed(42)
 untrained = MiniGPT(GPTConfig(vocab_size=V))
 untrained.eval()
@@ -119,7 +119,7 @@ x = torch.stack([train_data[i:i + 128] for i in ix])
 y = torch.stack([train_data[i + 1:i + 129] for i in ix])
 print("one snippet begins:", repr(decode(x[0, :20].tolist())))
 
-# steps 2 to 4: cards, the blocks, and a wheel for every position
+# steps 2 to 4: embeddings, the blocks, and a wheel for every position
 logits, loss = step_model(x, y)
 chance = torch.softmax(logits[0, 0], -1)[y[0, 0]].item()
 print(f"its first wheel gives the real next letter, {chars[y[0, 0]]!r}, a chance of {chance:.2%}")
@@ -132,20 +132,20 @@ step_opt.zero_grad()
 loss.backward()
 step_opt.step()
 g_after = step_model.token_embedding.weight[stoi["g"], :4].tolist()
-print("the g card's first numbers moved from", [round(v, 5) for v in g_before], "to", [round(v, 5) for v in g_after])
+print("the g token embedding's first numbers moved from", [round(v, 5) for v in g_before], "to", [round(v, 5) for v in g_after])
 print(f"the chance of d after goo went from {before:.3%} to {d_after_goo(step_model):.3%}")""")
 
 md("""
 ## 6. Following the blame back, by hand
 
-Backpropagation's key moves, worked by hand for the last link of the chain: the exhibit's guess after `good m`, where the real next letter is `y`. Three rules carry the blame from the surprise score back to the answer cards. Then PyTorch's `loss.backward()` does the same for every link, and the two should agree.
+Backpropagation's key moves, worked by hand for the last link of the chain: the exhibit's guess after `good m`, where the real next letter is `y`. Three rules carry the blame from the surprise score back to the rows of lm_head. Then PyTorch's `loss.backward()` does the same for every link, and the two should agree.
 """)
 code("""cap = {}
-hook = exhibit.final_ln.register_forward_hook(lambda mod, inp, out: cap.update(card=out))
+hook = exhibit.final_ln.register_forward_hook(lambda mod, inp, out: cap.update(hidden=out))
 exhibit.requires_grad_(True)
 logits, _ = exhibit(torch.tensor([[stoi[ch] for ch in "good m"]]))
 hook.remove()
-card = cap["card"][0, -1].detach()          # the last working card, after the final normalisation
+hidden = cap["hidden"][0, -1].detach()      # the last hidden state, after the final normalisation
 scores = logits[0, -1]
 target = stoi["y"]
 loss = F.cross_entropy(scores[None], torch.tensor([target]))
@@ -154,24 +154,24 @@ print(f"surprise score: {loss.item():.3f}")
 p = F.softmax(scores, dim=-1).detach()                 # the wheel: 65 chances
 blame_scores = p.clone()
 blame_scores[target] -= 1                              # rule 1: chance, minus 1 for the real letter
-blame_cards = torch.outer(blame_scores, card)          # rule 2: each answer card's blame, scaled by the working card
+blame_rows = torch.outer(blame_scores, hidden)         # rule 2: each row's blame, scaled by the hidden state
 blame_biases = blame_scores                            # rule 3: added, so passed on unchanged
-blame_card = exhibit.lm_head.weight.detach().T @ blame_scores   # rule 2 again: back to the working card
+blame_hidden = exhibit.lm_head.weight.detach().T @ blame_scores   # rule 2 again: back to the hidden state
 
 for ch in "yeaoz":
     print(f"{ch!r}: chance {p[stoi[ch]]:.2%}, blame on its score {blame_scores[stoi[ch]]:+.3f}, "
-          f"blame on its answer card's first number {blame_cards[stoi[ch], 0]:+.3f}")
+          f"blame on its lm_head row's first number {blame_rows[stoi[ch], 0]:+.3f}")
 
 exhibit.zero_grad()
 loss.backward()                                        # PyTorch walks the whole chain
-print("biggest difference from loss.backward():", (blame_cards - exhibit.lm_head.weight.grad).abs().max().item())
+print("biggest difference from loss.backward():", (blame_rows - exhibit.lm_head.weight.grad).abs().max().item())
 exhibit.zero_grad()
 exhibit.requires_grad_(False)""")
 
 md("""
 ## 7. Growing the exhibit
 
-This is exactly how I grew the exhibit: the notebook's model and settings, 3,000 steps of 32 snippets of 128 letters, with every random choice fixed in advance. Five times along the way, it stops to sit the exam, write from `ROMEO:`, and report the start of the `g` card and the chance of `d` after `goo`.
+This is exactly how I grew the exhibit: the notebook's model and settings, 3,000 steps of 32 snippets of 128 letters, with every random choice fixed in advance. Five times along the way, it stops to sit the exam, write from `ROMEO:`, and report the start of the `g` token embedding and the chance of `d` after `goo`.
 """)
 code("""def exam_score(model, stride=64):   # every 64th snippet of the locked-away exam text
     scores = []
@@ -206,8 +206,8 @@ def snapshot(step):
         d = F.softmax(logits[0, -1], -1)[stoi["d"]].item()
     torch.random.set_rng_state(rng)
     model.train()
-    g_card = ", ".join(f"{v:.3f}" for v in model.token_embedding.weight[stoi["g"], :4].tolist())
-    print(f"--- step {step}: exam score {score:.2f}; g card begins {g_card}; d after goo {d:.1%}")
+    g_emb = ", ".join(f"{v:.3f}" for v in model.token_embedding.weight[stoi["g"], :4].tolist())
+    print(f"--- step {step}: exam score {score:.2f}; g token embedding begins {g_emb}; d after goo {d:.1%}")
     print(decode(idx[0].tolist()), "\\n")
 
 t = time.time()

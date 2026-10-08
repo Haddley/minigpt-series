@@ -27,7 +27,7 @@ from notebook_setup import setup
 run = setup("part7-sliding-window")
 sys.path.insert(0, os.path.abspath("../part5-modern-block"))""")
 
-md("## 1. Counting the matches\n\nEvery working card matches its query against every position up to its own. Each doubling of the row roughly quadruples the matches. With a 256-position window, they grow only in step with the row.")
+md("## 1. Counting the matches\n\nEvery hidden state matches its query against every position up to its own. Each doubling of the row roughly quadruples the matches. With a 256-position window, they grow only in step with the row.")
 code("""def full_matches(T):
     return T * (T + 1) // 2
 

@@ -53,7 +53,7 @@ toks = {name: load_tokenizer(name) for name in ("char", "bpe8k", "gpt2")}
 sentence = "Once upon a time, there was a little dog named Spot."
 for name, tok in toks.items():
     ids = tok.encode(sentence)
-    print(f"{name:6} {tok.vocab_size:>6,} token cards  {len(ids):>2} tokens: " + "|".join(tok.decode([i]) for i in ids))
+    print(f"{name:6} {tok.vocab_size:>6,} token embeddings  {len(ids):>2} tokens: " + "|".join(tok.decode([i]) for i in ids))
     if name != "char":
         print(" " * 8 + "IDs:", ids)""")
 
@@ -90,14 +90,14 @@ print(f"{len(val) / len(words):.2f} letters per word, counting its space: 256 le
 story = next(s for s in stories if 900 < len(s) < 1100)
 print(f"a {len(story)}-letter story needs {len(toks['bpe8k'].encode(story))} of the 256 positions with my 8k BPE")""")
 
-md("## 5. What bigger pieces cost: token cards")
+md("## 5. What bigger pieces cost: token embeddings")
 code("""from model import MiniGPT
 for name, tok in toks.items():
     m = MiniGPT(tok.vocab_size)
     total = sum(p.numel() for p in m.parameters())
-    cards = m.tok_emb.weight.numel()
-    print(f"{name:6} {tok.vocab_size:>6,} cards: {cards:>10,} numbers on the cards, "
-          f"{total - cards:,} in the blocks, {total / 1e6:.1f} million in all ({cards / total:.0%} cards)")""")
+    emb = m.tok_emb.weight.numel()
+    print(f"{name:6} {tok.vocab_size:>6,} embeddings: {emb:>10,} numbers in the embeddings, "
+          f"{total - emb:,} in the blocks, {total / 1e6:.1f} million in all ({emb / total:.0%} embeddings)")""")
 
 md(f"""
 ## 6. The race

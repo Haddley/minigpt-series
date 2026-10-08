@@ -78,50 +78,50 @@ md("## 4. Step 1: letters to numbers")
 code("""ids = [stoi[ch] for ch in "goo"]
 ids""")
 
-md("## 5. Step 2: letter cards, position cards, and working cards\n\nThe letter cards and position cards are fixed tables. Adding a letter card to its position card makes a working card, one per position.")
-code("""g_card   = model.token_embedding.weight[stoi["g"]]   # the g letter card
-pos1     = model.position_embedding.weight[0]         # the position 1 card (Python counts from 0)
-working1 = g_card + pos1                              # working card 1, before block 1
-print("g letter card:    ", g_card[:4])
-print("position 1 card:  ", pos1[:4])
-print("working card 1:   ", working1[:4])""")
-md("All three working cards for `goo`, exactly as `MiniGPT.forward` makes them:")
+md("## 5. Step 2: token embeddings, position embeddings, and hidden states\n\nThe token embeddings and position embeddings are fixed tables. Adding a token embedding to its position embedding makes an input embedding, one per position: the first hidden states.")
+code("""g_emb    = model.token_embedding.weight[stoi["g"]]   # the g token embedding
+pos1     = model.position_embedding.weight[0]         # the position 1 embedding (Python counts from 0)
+input1   = g_emb + pos1                               # input embedding 1, before block 1
+print("g token embedding:   ", g_emb[:4])
+print("position 1 embedding:", pos1[:4])
+print("input embedding 1:   ", input1[:4])""")
+md("All three input embeddings for `goo`, exactly as `MiniGPT.forward` makes them:")
 code("""idx = torch.tensor([ids])
 x = model.token_embedding(idx) + model.position_embedding(torch.arange(3))
-print(x.shape)   # 1 text, 3 working cards, 128 numbers each""")
-md("Neighbouring position cards end up alike, and far-apart ones point the opposite way (the post's position ruler):")
+print(x.shape)   # 1 text, 3 hidden states, 128 numbers each""")
+md("Neighbouring position embeddings end up alike, and far-apart ones point the opposite way (the post's position ruler):")
 code("""P = F.normalize(model.position_embedding.weight, dim=1)
 sim = P @ P.T
 print("neighbours:     ", round(sim.diagonal(1).mean().item(), 2))
 print("100 apart:      ", round(sim.diagonal(100).mean().item(), 2))""")
 
-md("## 6. Step 3, inside block 1: attention\n\nNormalise the working cards, then make the query, key, and value cards with block 1's three fixed recipes.")
+md("## 6. Step 3, inside block 1: attention\n\nNormalise the hidden states, then make the queries, keys, and values with block 1's three fixed tables of weights.")
 code("""block1 = model.blocks[0]
-xn = block1.ln1(x)                      # normalised working cards
-q = block1.attn.query(xn)[0]            # query cards: 3 x 128
+xn = block1.ln1(x)                      # normalised hidden states
+q = block1.attn.query(xn)[0]            # queries: 3 x 128
 k = block1.attn.key(xn)[0]
 v = block1.attn.value(xn)[0]
-print("working card 3, normalised:", xn[0, 2, :3])
-print("its query card, head 1:   ", q[2, :3])""")
-md("Every number on a query card is a weighted mix of all 128 numbers on the working card, plus a bias. Here is the second number of working card 3's query card, worked out by hand:")
+print("hidden state 3, normalised:", xn[0, 2, :3])
+print("its query, head 1:        ", q[2, :3])""")
+md("Every number of a query is a weighted mix of all 128 numbers of the hidden state, plus a bias. Here is the second number of hidden state 3's query, worked out by hand:")
 code("""W, b = block1.attn.query.weight, block1.attn.query.bias
 terms = W[1] * xn[0, 2]                 # 128 weight x number products
 print("first three terms:", [round(t, 3) for t in terms[:3].tolist()])
 print("sum of 128 terms + bias:", round((terms.sum() + b[1]).item(), 2))""")
-md("Head 1 uses the first 32 numbers of each card. Match working card 3's query against every key, shrink by √32, and share out with softmax:")
+md("Head 1 uses the first 32 numbers of each query, key, and value. Match hidden state 3's query against every key, shrink by √32, and share out with softmax:")
 code("""hd = 32
 scores = q[2, :hd] @ k[:, :hd].T        # query x key, added up
 shrunk = scores / math.sqrt(hd)
 shares = torch.softmax(shrunk, dim=-1)
 for name, row in [("query x key", scores), ("divided by sqrt(32)", shrunk), ("share of attention", shares)]:
     print(f"{name:20}", [round(t, 2) for t in row.tolist()])""")
-md("All four heads of block 1, for working card 3 (each head uses its own 32-number piece):")
+md("All four heads of block 1, for hidden state 3 (each head uses its own 32-number piece):")
 code("""for h in range(4):
     s = slice(h * hd, (h + 1) * hd)
     sh = torch.softmax(q[2, s] @ k[:, s].T / math.sqrt(hd), dim=-1)
     print(f"head {h + 1}:", [f"{t:.1%}" for t in sh.tolist()])""")
 
-md("## 7. Four blocks in a row\n\nEach block adds to the working cards: working card out = working card in + what attention adds + what the MLP adds. Here is what each block does to working card 3.")
+md("## 7. Four blocks in a row\n\nEach block adds to the hidden states: hidden state out = hidden state in + what attention adds + what the MLP adds. Here is what each block does to hidden state 3.")
 code("""x0 = x.clone()
 x_run = x.clone()
 for n, blk in enumerate(model.blocks, start=1):
@@ -132,7 +132,7 @@ for n, blk in enumerate(model.blocks, start=1):
           f"in-vs-out likeness {F.cosine_similarity(x_run[0,2], z[0,2], dim=0):.2f}")
     x_run = z
 print("likeness to the input embedding after block 4:", round(F.cosine_similarity(x0[0,2], x_run[0,2], dim=0).item(), 2))""")
-md("Stopping early (the *logit lens*): send the last working card to the answer cards after each block.")
+md("Stopping early (the *logit lens*): send the last hidden state to lm_head after each block.")
 code("""text = "First Citizen:\\nBefore we proceed any further, hear me spea"
 idx2 = torch.tensor([[stoi[ch] for ch in text]])
 h = model.token_embedding(idx2) + model.position_embedding(torch.arange(idx2.shape[1]))
@@ -144,7 +144,7 @@ for n, blk in enumerate(model.blocks, start=1):
     h = blk(h)
     print(f"after block {n}: ", peek(h))""")
 
-md("## 8. Step 4: the answer cards\n\nNormalise the last working card once more, then score it against all 65 answer cards: multiply, add up, add the bias.")
+md("## 8. Step 4: lm_head\n\nNormalise the last hidden state once more, then score it against all 65 rows of lm_head: multiply, add up, add the bias.")
 code("""last = model.final_ln(x_run[0, 2])
 scores = model.lm_head.weight @ last + model.lm_head.bias
 for ch in "dkrs":
@@ -152,12 +152,12 @@ for ch in "dkrs":
 print("lowest:", repr(chars[scores.argmin()]), round(scores.min().item(), 2))
 p = torch.softmax(scores, dim=-1)
 print("d chance:", f"{p[stoi['d']]:.1%}")""")
-md("Is the guess just the closest letter card? Not in this model: compare the last working card with the letter cards and with the answer cards.")
+md("Is the guess just the closest token embedding? Not in this model: compare the last hidden state with the token embeddings and with the rows of lm_head.")
 code("""def rank_of_d(table):
     sim = F.cosine_similarity(last[None], table, dim=1)
     return (sim.argsort(descending=True) == stoi["d"]).nonzero().item() + 1
-print("d's rank among the letter cards:", rank_of_d(model.token_embedding.weight))
-print("d's rank among the answer cards:", rank_of_d(model.lm_head.weight))""")
+print("d's rank among the token embeddings:", rank_of_d(model.token_embedding.weight))
+print("d's rank among the rows of lm_head:", rank_of_d(model.lm_head.weight))""")
 
 md("## 9. Step 5: temperature, trimming, and spinning the wheel")
 code("""for t in (0.5, 1.0, 2.0):

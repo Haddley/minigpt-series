@@ -29,7 +29,7 @@ sys.path.insert(0, os.path.abspath("."))
 from notebook_setup import setup
 run = setup("part5-modern-block")""")
 
-md("## 1. Six machines, and what each change costs\n\nThe new block, then each change turned back off on its own. Every machine has the same 8,192 token cards.")
+md("## 1. Six machines, and what each change costs\n\nThe new block, then each change turned back off on its own. Every machine has the same 8,192 token embeddings.")
 code("""import mlx.core as mx
 from mlx.utils import tree_flatten
 from model_llama import Config, MiniLlama
@@ -39,22 +39,22 @@ variants = {
     "... but the old MLP":        {"mlp": "gelu"},
     "... but full keys and values": {"n_kv_heads": 6},
     "... but the old normalise":  {"norm": "layer"},
-    "... but position cards":     {"pos": "learned"},
+    "... but position embeddings":     {"pos": "learned"},
 }
 for name, change in variants.items():
     m = MiniLlama(Config(vocab_size=8192, **change))
     mx.eval(m.parameters())
     print(f"{name:32} {sum(v.size for _, v in tree_flatten(m.parameters())):>12,} numbers")""")
 
-md("## 2. RoPE: the match only feels the distance\n\nTurn the same query card and key card for two pairs of positions with the same gap: (7, 5) and (107, 105). With RoPE, the two matches come out the same.")
+md("## 2. RoPE: the match only feels the distance\n\nTurn the same query and key for two pairs of positions with the same gap: (7, 5) and (107, 105). With RoPE, the two matches come out the same.")
 code("""import mlx.nn as nn
 rope = nn.RoPE(64, traditional=False, base=10000)
 mx.random.seed(0)
 q = mx.random.normal((1, 1, 1, 64))
 k = mx.random.normal((1, 1, 1, 64))
 
-def turned(card, position):
-    return rope(card, offset=position)
+def turned(vec, position):
+    return rope(vec, offset=position)
 
 for qp, kp in ((7, 5), (107, 105), (7, 3)):
     match = (turned(q, qp) * turned(k, kp)).sum().item()

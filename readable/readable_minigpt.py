@@ -646,3 +646,14 @@ print(write("ROMEO:\n", 200, model, temperature=0.8, seed=1))
 #
 # That is the whole model: four small tools, attention, the MLP, four blocks, a last dot product, and a
 # wheel. Everything it knows is in the 826,433 numbers of section 2.
+
+# %% [markdown]
+# ## Try it yourself
+#
+# Change the starting text, and run this cell again. Try a different `seed` for a different spin of the
+# wheel, a lower `temperature` (such as 0.3) for safer guesses, or a higher one (such as 1.5) for wilder
+# ones. The model only knows its 65 letters: `letters_to_ids` quietly skips any other letter, such as
+# `é` or `7`.
+
+# %%
+print(write("KING RICHARD III:\nA horse! a horse! my kingdom for a hors", 200, model, temperature=0.8, seed=1))
